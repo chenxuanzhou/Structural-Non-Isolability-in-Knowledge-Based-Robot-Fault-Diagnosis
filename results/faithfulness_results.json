@@ -1,0 +1,24 @@
+{
+  "caches": [
+    "va\\cache\\dataset.json",
+    "va\\cache\\dataset_all.json"
+  ],
+  "engines": {
+    "llm:qwen2.5:7b": {
+      "cycles": 44,
+      "claims": 108,
+      "claim_coverage": 0.9907,
+      "citation_resolution": 0.9346,
+      "evidence_anchoring": 0.81,
+      "candidate_compliance": 1.0
+    },
+    "rule-based": {
+      "cycles": 711,
+      "claims": 8088,
+      "claim_coverage": 1.0,
+      "citation_resolution": 1.0,
+      "evidence_anchoring": 1.0,
+      "candidate_compliance": 1.0
+    }
+  }
+}

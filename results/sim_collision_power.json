@@ -1,0 +1,125 @@
+{
+  "note": "simulated contacts; the DATA REQUIREMENT is the claim, never the accuracy magnitudes, which are noise-floor dependent and must not be quoted as a property of real collisions",
+  "sweeps": {
+    "no jitter": [
+      {
+        "n_instantiations": 2,
+        "trials": 5,
+        "search_validated": 0.0,
+        "verdict_rate": 0.0,
+        "adopt_rate_given_verdict": null,
+        "acc_test_mean": null
+      },
+      {
+        "n_instantiations": 3,
+        "trials": 5,
+        "search_validated": 0.0,
+        "verdict_rate": 0.0,
+        "adopt_rate_given_verdict": null,
+        "acc_test_mean": null
+      },
+      {
+        "n_instantiations": 4,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.0,
+        "acc_test_mean": 0.99
+      },
+      {
+        "n_instantiations": 6,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.0,
+        "acc_test_mean": 0.9933333333333334
+      },
+      {
+        "n_instantiations": 8,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.2,
+        "acc_test_mean": 0.97
+      },
+      {
+        "n_instantiations": 12,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.0,
+        "acc_test_mean": 1.0
+      },
+      {
+        "n_instantiations": 16,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.2,
+        "acc_test_mean": 1.0
+      }
+    ],
+    "jitter 2.5 N.m": [
+      {
+        "n_instantiations": 2,
+        "trials": 5,
+        "search_validated": 0.0,
+        "verdict_rate": 0.0,
+        "adopt_rate_given_verdict": null,
+        "acc_test_mean": null
+      },
+      {
+        "n_instantiations": 3,
+        "trials": 5,
+        "search_validated": 0.0,
+        "verdict_rate": 0.0,
+        "adopt_rate_given_verdict": null,
+        "acc_test_mean": null
+      },
+      {
+        "n_instantiations": 4,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.4,
+        "acc_test_mean": 0.8373684210526318
+      },
+      {
+        "n_instantiations": 6,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.4,
+        "acc_test_mean": 0.9326436781609196
+      },
+      {
+        "n_instantiations": 8,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.4,
+        "acc_test_mean": 0.9
+      },
+      {
+        "n_instantiations": 12,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.2,
+        "acc_test_mean": 0.9066666666666666
+      },
+      {
+        "n_instantiations": 16,
+        "trials": 5,
+        "search_validated": 1.0,
+        "verdict_rate": 1.0,
+        "adopt_rate_given_verdict": 0.2,
+        "acc_test_mean": 0.939746835443038
+      }
+    ]
+  },
+  "min_instantiations": {
+    "no jitter": 4,
+    "jitter 2.5 N.m": 4
+  }
+}

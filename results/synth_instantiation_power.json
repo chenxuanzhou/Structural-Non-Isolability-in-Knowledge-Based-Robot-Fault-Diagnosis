@@ -1,0 +1,91 @@
+{
+  "cluster": [
+    "FM_misgrip",
+    "FM_invalidgrip"
+  ],
+  "cycles_per_instantiation": 8,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "sweep": [
+    {
+      "n_instantiations": 2,
+      "trials": 5,
+      "search_validated": 0.0,
+      "verdict_rate": 0.0,
+      "adopt_rate_given_verdict": null,
+      "acc_test_mean": null,
+      "acc_test_sd": null
+    },
+    {
+      "n_instantiations": 3,
+      "trials": 5,
+      "search_validated": 0.0,
+      "verdict_rate": 0.0,
+      "adopt_rate_given_verdict": null,
+      "acc_test_mean": null,
+      "acc_test_sd": null
+    },
+    {
+      "n_instantiations": 4,
+      "trials": 5,
+      "search_validated": 1.0,
+      "verdict_rate": 1.0,
+      "adopt_rate_given_verdict": 0.6,
+      "acc_test_mean": 0.99375,
+      "acc_test_sd": 0.012499999999999999
+    },
+    {
+      "n_instantiations": 6,
+      "trials": 5,
+      "search_validated": 1.0,
+      "verdict_rate": 1.0,
+      "adopt_rate_given_verdict": 0.2,
+      "acc_test_mean": 0.9875,
+      "acc_test_sd": 0.010206207261596593
+    },
+    {
+      "n_instantiations": 8,
+      "trials": 5,
+      "search_validated": 1.0,
+      "verdict_rate": 1.0,
+      "adopt_rate_given_verdict": 0.0,
+      "acc_test_mean": 0.99375,
+      "acc_test_sd": 0.007654655446197431
+    },
+    {
+      "n_instantiations": 12,
+      "trials": 5,
+      "search_validated": 1.0,
+      "verdict_rate": 1.0,
+      "adopt_rate_given_verdict": 0.0,
+      "acc_test_mean": 0.9958333333333332,
+      "acc_test_sd": 0.008333333333333349
+    },
+    {
+      "n_instantiations": 16,
+      "trials": 5,
+      "search_validated": 1.0,
+      "verdict_rate": 1.0,
+      "adopt_rate_given_verdict": 0.0,
+      "acc_test_mean": 0.996875,
+      "acc_test_sd": 0.00625
+    },
+    {
+      "n_instantiations": 20,
+      "trials": 5,
+      "search_validated": 1.0,
+      "verdict_rate": 1.0,
+      "adopt_rate_given_verdict": 0.0,
+      "acc_test_mean": 0.99875,
+      "acc_test_sd": 0.0024999999999999914
+    }
+  ],
+  "min_instantiations_for_validated_search": 4,
+  "min_instantiations_for_stable_verdict": 8,
+  "caveat": "semi-synthetic faults; only the data requirement is claimed, never that a repair works on real faults. The injected pair is unusually separable, so these counts are a floor."
+}

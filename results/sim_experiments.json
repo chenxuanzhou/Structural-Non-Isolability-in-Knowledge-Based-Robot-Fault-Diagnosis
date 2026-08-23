@@ -1,0 +1,192 @@
+{
+  "note": "simulated cell; mechanism tests only, never pooled with voraus-AD numbers",
+  "experiment_a_collision": [
+    {
+      "material": "carton (stiff)",
+      "instantiation": 0,
+      "max_z_any": 3.4562203800322693,
+      "max_z_load_joints": 1.968202494116944,
+      "max_z_distal_joints": 3.4562203800322693,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "torque_sensor_a_5"
+      ]
+    },
+    {
+      "material": "carton (stiff)",
+      "instantiation": 1,
+      "max_z_any": 3.684039255663591,
+      "max_z_load_joints": 1.959850338174491,
+      "max_z_distal_joints": 3.684039255663591,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "motor_torque_5"
+      ]
+    },
+    {
+      "material": "carton (stiff)",
+      "instantiation": 2,
+      "max_z_any": 3.2997455639224946,
+      "max_z_load_joints": 1.9502809504695215,
+      "max_z_distal_joints": 3.2997455639224946,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "motor_torque_5"
+      ]
+    },
+    {
+      "material": "carton (stiff)",
+      "instantiation": 3,
+      "max_z_any": 3.1328372162614135,
+      "max_z_load_joints": 1.9502633884895428,
+      "max_z_distal_joints": 3.1328372162614135,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "motor_torque_5"
+      ]
+    },
+    {
+      "material": "carton (stiff)",
+      "instantiation": 4,
+      "max_z_any": 3.3433841029778564,
+      "max_z_load_joints": 1.954501119201003,
+      "max_z_distal_joints": 3.3433841029778564,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "torque_sensor_a_3"
+      ]
+    },
+    {
+      "material": "carton (stiff)",
+      "instantiation": 5,
+      "max_z_any": 3.232624392541856,
+      "max_z_load_joints": 1.9612276366301025,
+      "max_z_distal_joints": 3.232624392541856,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "motor_torque_5"
+      ]
+    },
+    {
+      "material": "foam (soft)",
+      "instantiation": 0,
+      "max_z_any": 3.4562203800322693,
+      "max_z_load_joints": 1.968202494116944,
+      "max_z_distal_joints": 3.4562203800322693,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "torque_sensor_a_5"
+      ]
+    },
+    {
+      "material": "foam (soft)",
+      "instantiation": 1,
+      "max_z_any": 3.684039255663591,
+      "max_z_load_joints": 1.959850338174491,
+      "max_z_distal_joints": 3.684039255663591,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "motor_torque_5"
+      ]
+    },
+    {
+      "material": "foam (soft)",
+      "instantiation": 2,
+      "max_z_any": 3.2997455639224946,
+      "max_z_load_joints": 1.9502809504695215,
+      "max_z_distal_joints": 3.2997455639224946,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "motor_torque_5"
+      ]
+    },
+    {
+      "material": "foam (soft)",
+      "instantiation": 3,
+      "max_z_any": 3.1328372162614135,
+      "max_z_load_joints": 1.9502633884895428,
+      "max_z_distal_joints": 3.1328372162614135,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "motor_torque_5"
+      ]
+    },
+    {
+      "material": "foam (soft)",
+      "instantiation": 4,
+      "max_z_any": 3.3433841029778564,
+      "max_z_load_joints": 1.954501119201003,
+      "max_z_distal_joints": 3.3433841029778564,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "torque_sensor_a_3"
+      ]
+    },
+    {
+      "material": "foam (soft)",
+      "instantiation": 5,
+      "max_z_any": 3.232624392541856,
+      "max_z_load_joints": 1.9612276366301025,
+      "max_z_distal_joints": 3.232624392541856,
+      "top5_has_distal": true,
+      "top5": [
+        "motor_torque_4",
+        "torque_sensor_a_4",
+        "motor_torque_5"
+      ]
+    }
+  ],
+  "experiment_b_thermal": [
+    {
+      "representation": "deployed (torque, max|z| only)",
+      "cost_class": "deployed",
+      "n_features": 12,
+      "acc_mean": 0.97,
+      "acc_sd": 0.037118429085533464
+    },
+    {
+      "representation": "+ free dims (torque sign/step/payload/shape)",
+      "cost_class": "free",
+      "n_features": 60,
+      "acc_mean": 0.9733333333333334,
+      "acc_sd": 0.038873012632301994
+    },
+    {
+      "representation": "+ motor_iq (PIPELINE cost)",
+      "cost_class": "pipeline",
+      "n_features": 78,
+      "acc_mean": 0.8766666666666666,
+      "acc_sd": 0.09404490653110587
+    },
+    {
+      "representation": "+ temperature (HARDWARE cost)",
+      "cost_class": "hardware",
+      "n_features": 96,
+      "acc_mean": 1.0,
+      "acc_sd": 0.0
+    }
+  ],
+  "cost_class_verdict": "temperature is genuinely required: no cheaper representation reaches it, so the HARDWARE cost class holds."
+}

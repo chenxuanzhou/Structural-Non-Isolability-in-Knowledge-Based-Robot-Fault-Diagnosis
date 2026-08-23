@@ -1,0 +1,561 @@
+{
+  "per_seed": [
+    {
+      "seed": 0,
+      "protocol": "setting",
+      "n_test": 396,
+      "n_fit": 359,
+      "point_top1": 0.16414141414141414,
+      "cluster_top1": 0.32575757575757575,
+      "two_stage_top1": 0.3005050505050505,
+      "routed_frac": 0.6641414141414141,
+      "adopted_clusters": [
+        "axisweight+losecan+varweight"
+      ],
+      "flat_classifier": {
+        "top1": 0.4722222222222222,
+        "per_category": {
+          "0": 0.32,
+          "1": 0.7866666666666666,
+          "2": 0.40476190476190477,
+          "3": 0.375,
+          "4": 0.26666666666666666,
+          "5": 0.0,
+          "6": 0.8378378378378378,
+          "7": 0.6,
+          "9": 0.0,
+          "10": 0.3958333333333333,
+          "11": 0.12
+        }
+      }
+    },
+    {
+      "seed": 1,
+      "protocol": "setting",
+      "n_test": 392,
+      "n_fit": 363,
+      "point_top1": 0.1683673469387755,
+      "cluster_top1": 0.35459183673469385,
+      "two_stage_top1": 0.3163265306122449,
+      "routed_frac": 0.6709183673469388,
+      "adopted_clusters": [
+        "axisweight+losecan+varweight"
+      ],
+      "flat_classifier": {
+        "top1": 0.5408163265306123,
+        "per_category": {
+          "0": 0.7534246575342466,
+          "1": 0.8961038961038961,
+          "2": 0.35555555555555557,
+          "3": 0.25,
+          "4": 0.2,
+          "6": 0.5526315789473685,
+          "7": 0.425,
+          "8": 0.0,
+          "10": 0.4716981132075472,
+          "11": 0.08
+        }
+      }
+    },
+    {
+      "seed": 2,
+      "protocol": "setting",
+      "n_test": 414,
+      "n_fit": 341,
+      "point_top1": 0.15217391304347827,
+      "cluster_top1": 0.3188405797101449,
+      "two_stage_top1": 0.24154589371980675,
+      "routed_frac": 0.6328502415458938,
+      "adopted_clusters": [
+        "axisweight+losecan+varweight"
+      ],
+      "flat_classifier": {
+        "top1": 0.5748792270531401,
+        "per_category": {
+          "0": 0.8767123287671232,
+          "1": 0.9545454545454546,
+          "2": 0.4878048780487805,
+          "3": 0.5238095238095238,
+          "4": 0.26666666666666666,
+          "5": 0.0,
+          "6": 0.4838709677419355,
+          "7": 0.13636363636363635,
+          "9": 0.0,
+          "10": 0.5849056603773585,
+          "11": 0.12
+        }
+      }
+    },
+    {
+      "seed": 3,
+      "protocol": "setting",
+      "n_test": 364,
+      "n_fit": 391,
+      "point_top1": 0.19230769230769232,
+      "cluster_top1": 0.36813186813186816,
+      "two_stage_top1": 0.3434065934065934,
+      "routed_frac": 0.6675824175824175,
+      "adopted_clusters": [
+        "axisweight+losecan+varweight"
+      ],
+      "flat_classifier": {
+        "top1": 0.5274725274725275,
+        "per_category": {
+          "0": 0.3387096774193548,
+          "1": 0.8311688311688312,
+          "2": 0.7631578947368421,
+          "3": 0.3125,
+          "4": 0.07692307692307693,
+          "6": 0.6578947368421053,
+          "7": 0.4418604651162791,
+          "8": 0.0,
+          "10": 0.34,
+          "11": 0.6470588235294118
+        }
+      }
+    },
+    {
+      "seed": 4,
+      "protocol": "setting",
+      "n_test": 403,
+      "n_fit": 352,
+      "point_top1": 0.1687344913151365,
+      "cluster_top1": 0.34491315136476425,
+      "two_stage_top1": 0.31017369727047145,
+      "routed_frac": 0.6699751861042184,
+      "adopted_clusters": [
+        "axisweight+losecan+varweight"
+      ],
+      "flat_classifier": {
+        "top1": 0.511166253101737,
+        "per_category": {
+          "0": 0.6133333333333333,
+          "1": 0.9259259259259259,
+          "2": 0.5185185185185185,
+          "3": 0.47619047619047616,
+          "4": 0.125,
+          "5": 0.0,
+          "6": 0.675,
+          "7": 0.175,
+          "9": 0.0,
+          "10": 0.5,
+          "11": 0.03125
+        }
+      }
+    }
+  ],
+  "certificates": {
+    "invalidgrip+misgrip": {
+      "members": [
+        "FM_invalidgrip",
+        "FM_misgrip"
+      ],
+      "adopted": false,
+      "verdict": "undetermined",
+      "reason": "too few instantiations of this cluster's members on one side of a leave-setting-out split"
+    },
+    "axisweight+losecan+varweight": {
+      "members": [
+        "FM_axisweight",
+        "FM_losecan",
+        "FM_varweight"
+      ],
+      "n_fit": 158,
+      "n_test": 152,
+      "acc_test": 0.8402097942394168,
+      "acc_deployed_repr": 0.561503908995622,
+      "acc_majority": 0.5041039818014947,
+      "acc_permuted": 0.4305279016254673,
+      "dims_selected": {
+        "sign": 4,
+        "step": 3,
+        "unread": 2,
+        "shape": 2
+      },
+      "cost_class": "pipeline",
+      "cost_class_spread": {
+        "pipeline": 2,
+        "free": 3
+      },
+      "search_validated_seeds": "5/5",
+      "adopted_seeds": "5/5",
+      "adopted": true,
+      "wall": "distinguishability"
+    },
+    "collision_card+collision_foam": {
+      "members": [
+        "FM_collision_card",
+        "FM_collision_foam"
+      ],
+      "n_fit": 37,
+      "n_test": 57,
+      "acc_test": 0.7759282440026194,
+      "acc_deployed_repr": 0.7093330281929173,
+      "acc_majority": 0.7183979956731775,
+      "acc_permuted": 0.6083989042373374,
+      "dims_selected": {
+        "sign": 5,
+        "step": 5,
+        "payload": 5,
+        "shape": 5
+      },
+      "cost_class": "free",
+      "cost_class_spread": {
+        "free": 5
+      },
+      "search_validated_seeds": "0/5",
+      "adopted_seeds": "0/5",
+      "adopted": false,
+      "wall": "inconclusive"
+    }
+  },
+  "fixed_configuration": {
+    "dims": [
+      "mag",
+      "sign",
+      "step"
+    ],
+    "per_seed": [
+      {
+        "seed": 0,
+        "protocol": "setting",
+        "n_test": 396,
+        "n_fit": 359,
+        "point_top1": 0.16414141414141414,
+        "cluster_top1": 0.32575757575757575,
+        "two_stage_top1": 0.3005050505050505,
+        "routed_frac": 0.6641414141414141,
+        "adopted_clusters": [
+          "axisweight+losecan+varweight"
+        ]
+      },
+      {
+        "seed": 1,
+        "protocol": "setting",
+        "n_test": 392,
+        "n_fit": 363,
+        "point_top1": 0.1683673469387755,
+        "cluster_top1": 0.35459183673469385,
+        "two_stage_top1": 0.3112244897959184,
+        "routed_frac": 0.6709183673469388,
+        "adopted_clusters": [
+          "axisweight+losecan+varweight"
+        ]
+      },
+      {
+        "seed": 2,
+        "protocol": "setting",
+        "n_test": 414,
+        "n_fit": 341,
+        "point_top1": 0.15217391304347827,
+        "cluster_top1": 0.3188405797101449,
+        "two_stage_top1": 0.2777777777777778,
+        "routed_frac": 0.6328502415458938,
+        "adopted_clusters": [
+          "axisweight+losecan+varweight"
+        ]
+      },
+      {
+        "seed": 3,
+        "protocol": "setting",
+        "n_test": 364,
+        "n_fit": 391,
+        "point_top1": 0.19230769230769232,
+        "cluster_top1": 0.36813186813186816,
+        "two_stage_top1": 0.34615384615384615,
+        "routed_frac": 0.6675824175824175,
+        "adopted_clusters": [
+          "axisweight+losecan+varweight"
+        ]
+      },
+      {
+        "seed": 4,
+        "protocol": "setting",
+        "n_test": 403,
+        "n_fit": 352,
+        "point_top1": 0.1687344913151365,
+        "cluster_top1": 0.34491315136476425,
+        "two_stage_top1": 0.31017369727047145,
+        "routed_frac": 0.6699751861042184,
+        "adopted_clusters": [
+          "axisweight+losecan+varweight"
+        ]
+      }
+    ],
+    "two_stage_top1": 0.30916697230061285,
+    "ci95": 0.030621596178786754,
+    "cluster_acc": 0.8685083109746812
+  },
+  "untestable": [
+    {
+      "members": [
+        "FM_miscommutation",
+        "FM_overtemp"
+      ],
+      "reason": "temperature channel (absent from the cell) — hardware instrumentation, untestable here"
+    }
+  ],
+  "summary": {
+    "point_top1": {
+      "mean": 0.16914497154929936,
+      "ci95": 0.018100895606136265
+    },
+    "cluster_top1": {
+      "mean": 0.34244700233980935,
+      "ci95": 0.02520732865898676
+    },
+    "two_stage_top1": {
+      "mean": 0.3023915531028334,
+      "ci95": 0.04662825663498456
+    },
+    "routed_frac": {
+      "mean": 0.6610935253441765,
+      "ci95": 0.019868189484318333
+    }
+  },
+  "control_flat_classifier": {
+    "top1": 0.5253113112760478,
+    "per_category": {
+      "0": 0.5804359994108116,
+      "1": 0.8788821548821548,
+      "2": 0.5059597503243203,
+      "3": 0.3875,
+      "4": 0.18705128205128205,
+      "5": 0.0,
+      "6": 0.6414470242738494,
+      "7": 0.35564482029598304,
+      "9": 0.0,
+      "10": 0.45848742138364784,
+      "11": 0.19966176470588234,
+      "8": 0.0
+    }
+  },
+  "label_efficiency": {
+    "axisweight+losecan+varweight": {
+      "5": 0.4862655848011083,
+      "10": 0.6004109943372185,
+      "20": 0.695929376677395,
+      "40": 0.7553642789935456,
+      "80": 0.7775912173070713
+    }
+  },
+  "sensitivity": [
+    {
+      "setting": "COST_FACTOR[pipeline]=1.0",
+      "two_stage": 0.3018865025977829,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8375782152920482
+    },
+    {
+      "setting": "COST_FACTOR[pipeline]=3.0",
+      "two_stage": 0.3023915531028334,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8402097942394168
+    },
+    {
+      "setting": "COST_FACTOR[pipeline]=6.0  (shipped)",
+      "two_stage": 0.3023915531028334,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8402097942394168
+    },
+    {
+      "setting": "COST_FACTOR[pipeline]=10.0",
+      "two_stage": 0.3023915531028334,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8402097942394168
+    },
+    {
+      "setting": "min_gain=0.002",
+      "two_stage": 0.3023915531028334,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8402097942394168
+    },
+    {
+      "setting": "min_gain=0.005  (shipped)",
+      "two_stage": 0.3023915531028334,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8402097942394168
+    },
+    {
+      "setting": "min_gain=0.01",
+      "two_stage": 0.3034904542017345,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8452730853786573
+    },
+    {
+      "setting": "min_gain=0.02",
+      "two_stage": 0.2990948498061301,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8275515663913154
+    },
+    {
+      "setting": "adopt margin=(0.02, 0.01)",
+      "two_stage": 0.3023915531028334,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8402097942394168
+    },
+    {
+      "setting": "adopt margin=(0.05, 0.02)  (shipped)",
+      "two_stage": 0.3023915531028334,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8402097942394168
+    },
+    {
+      "setting": "adopt margin=(0.08, 0.04)",
+      "two_stage": 0.3023915531028334,
+      "adopted": [
+        "axisweight+losecan+varweight"
+      ],
+      "load_dims": [
+        "shape",
+        "sign",
+        "step",
+        "unread"
+      ],
+      "load_acc": 0.8402097942394168
+    }
+  ],
+  "granularity_ablation": {
+    "mode-level scalar": {
+      "n_features": 2,
+      "acc": 0.4553586201016331,
+      "majority": 0.5041039818014947
+    },
+    "per-family scalar": {
+      "n_features": 4,
+      "acc": 0.5267666278646622,
+      "majority": 0.5041039818014947
+    },
+    "joint-resolved (load)": {
+      "n_features": 12,
+      "acc": 0.7190972449476757,
+      "majority": 0.5041039818014947
+    },
+    "joint-resolved (all 6)": {
+      "n_features": 24,
+      "acc": 0.8599799171621815,
+      "majority": 0.5041039818014947
+    }
+  },
+  "mode_level_signature": {
+    "top1_off": 0.1629139072847682,
+    "top1_on": 0.14834437086092717,
+    "twin_clusters_off": 4,
+    "twin_clusters_on": 1,
+    "shipped": false
+  },
+  "leakage_check": {
+    "random_split": {
+      "flat_classifier": 0.7999999999999999,
+      "two_stage": 0.32137203166226913,
+      "point_top1": 0.16200527704485487
+    },
+    "leave_setting_out": {
+      "flat_classifier": 0.5253113112760478,
+      "two_stage": 0.3023915531028334,
+      "point_top1": 0.16914497154929936
+    },
+    "per_cluster": {
+      "axisweight+losecan+varweight": {
+        "random": {
+          "acc": 0.9329032258064517,
+          "adopted": true
+        },
+        "leave_setting_out": {
+          "acc": 0.8402097942394168,
+          "adopted": true
+        }
+      },
+      "collision_card+collision_foam": {
+        "random": {
+          "acc": 0.8297872340425532,
+          "adopted": true
+        },
+        "leave_setting_out": {
+          "acc": 0.7759282440026194,
+          "adopted": false
+        }
+      }
+    }
+  }
+}

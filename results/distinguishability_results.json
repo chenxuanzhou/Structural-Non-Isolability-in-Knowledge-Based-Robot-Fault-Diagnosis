@@ -1,0 +1,183 @@
+{
+  "n": 755,
+  "point_top1": 0.1629139072847682,
+  "point_random": 0.07142857142857142,
+  "point_lift": 2.280794701986755,
+  "cluster_top1": 0.3403973509933775,
+  "cluster_random": 0.14957426679280844,
+  "cluster_lift": 2.2757748260594775,
+  "per_category": {
+    "friction": {
+      "n": 144,
+      "cluster_acc": 0.2222222222222222,
+      "cluster_random": 0.07142857142857142,
+      "norm_lift": 3.111111111111111
+    },
+    "axisweight": {
+      "n": 156,
+      "cluster_acc": 0.6602564102564102,
+      "cluster_random": 0.21428571428571427,
+      "norm_lift": 3.0811965811965814
+    },
+    "coll_foam": {
+      "n": 72,
+      "cluster_acc": 0.0,
+      "cluster_random": 0.14285714285714285,
+      "norm_lift": 0.0
+    },
+    "coll_cable": {
+      "n": 48,
+      "cluster_acc": 0.0,
+      "cluster_random": 0.07142857142857142,
+      "norm_lift": 0.0
+    },
+    "coll_card": {
+      "n": 22,
+      "cluster_acc": 0.0,
+      "cluster_random": 0.14285714285714285,
+      "norm_lift": 0.0
+    },
+    "misgrip": {
+      "n": 11,
+      "cluster_acc": 0.0,
+      "cluster_random": 0.14285714285714285,
+      "norm_lift": 0.0
+    },
+    "losecan": {
+      "n": 74,
+      "cluster_acc": 0.7162162162162162,
+      "cluster_random": 0.21428571428571427,
+      "norm_lift": 3.3423423423423424
+    },
+    "varweight": {
+      "n": 80,
+      "cluster_acc": 0.675,
+      "cluster_random": 0.21428571428571427,
+      "norm_lift": 3.1500000000000004
+    },
+    "entangled": {
+      "n": 10,
+      "cluster_acc": 0.0,
+      "cluster_random": 0.07142857142857142,
+      "norm_lift": 0.0
+    },
+    "invalidgrip": {
+      "n": 12,
+      "cluster_acc": 0.0,
+      "cluster_random": 0.14285714285714285,
+      "norm_lift": 0.0
+    },
+    "commut": {
+      "n": 89,
+      "cluster_acc": 0.12359550561797752,
+      "cluster_random": 0.14285714285714285,
+      "norm_lift": 0.8651685393258427
+    },
+    "platform": {
+      "n": 37,
+      "cluster_acc": 0.10810810810810811,
+      "cluster_random": 0.07142857142857142,
+      "norm_lift": 1.5135135135135136
+    }
+  },
+  "routes": {
+    "human-resolvable": 0.6609271523178808,
+    "cluster-undetermined": 0.16158940397350993,
+    "decisive": 0.17748344370860927
+  },
+  "by_route": {
+    "human-resolvable": {
+      "n": 499,
+      "coverage": 0.6609271523178808,
+      "point_top1": 0.16432865731462926,
+      "cluster_top1": 0.42084168336673344
+    },
+    "cluster-undetermined": {
+      "n": 122,
+      "coverage": 0.16158940397350993,
+      "point_top1": 0.13114754098360656,
+      "cluster_top1": 0.18032786885245902
+    },
+    "decisive": {
+      "n": 134,
+      "coverage": 0.17748344370860927,
+      "point_top1": 0.1865671641791045,
+      "cluster_top1": 0.1865671641791045
+    }
+  },
+  "risk_coverage": [
+    {
+      "coverage": 0.10066225165562914,
+      "point_top1": 0.23684210526315788,
+      "cluster_top1": 0.5,
+      "margin_at": 0.4382
+    },
+    {
+      "coverage": 0.2,
+      "point_top1": 0.2185430463576159,
+      "cluster_top1": 0.4900662251655629,
+      "margin_at": 0.3833
+    },
+    {
+      "coverage": 0.2993377483443709,
+      "point_top1": 0.19911504424778761,
+      "cluster_top1": 0.41150442477876104,
+      "margin_at": 0.3333
+    },
+    {
+      "coverage": 0.4,
+      "point_top1": 0.2052980132450331,
+      "cluster_top1": 0.423841059602649,
+      "margin_at": 0.2742
+    },
+    {
+      "coverage": 0.5006622516556292,
+      "point_top1": 0.18783068783068782,
+      "cluster_top1": 0.3968253968253968,
+      "margin_at": 0.1917
+    },
+    {
+      "coverage": 0.6,
+      "point_top1": 0.17218543046357615,
+      "cluster_top1": 0.3598233995584989,
+      "margin_at": 0.1667
+    },
+    {
+      "coverage": 0.8,
+      "point_top1": 0.16556291390728478,
+      "cluster_top1": 0.37748344370860926,
+      "margin_at": 0.1623
+    },
+    {
+      "coverage": 1.0,
+      "point_top1": 0.1629139072847682,
+      "cluster_top1": 0.3403973509933775,
+      "margin_at": 0.0025
+    }
+  ],
+  "tau": 0.15,
+  "tau_coverage": 0.83841059602649,
+  "tie_composition": {
+    "structural": 514,
+    "numeric": 0
+  },
+  "twin_clusters": [
+    [
+      "FM_miscommutation",
+      "FM_overtemp"
+    ],
+    [
+      "FM_invalidgrip",
+      "FM_misgrip"
+    ],
+    [
+      "FM_axisweight",
+      "FM_losecan",
+      "FM_varweight"
+    ],
+    [
+      "FM_collision_card",
+      "FM_collision_foam"
+    ]
+  ]
+}
