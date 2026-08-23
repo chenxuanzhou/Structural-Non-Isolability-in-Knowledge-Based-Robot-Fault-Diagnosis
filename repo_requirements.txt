@@ -1,0 +1,28 @@
+# Reproduces every result in this repository.
+#
+#   python -m venv .venv
+#   .venv/bin/pip install -r requirements.txt      # Windows: .venv\Scripts\pip
+#
+# Tested on Python 3.12.10.  Versions are the ones the reported numbers were
+# produced with; these are exact pins so that a re-run gives the same digits.
+# Relaxing them to >= will very likely still work.
+
+numpy==2.0.2
+pandas==3.0.3
+scikit-learn==1.9.0
+networkx==3.6.1
+matplotlib==3.11.0
+
+# Detector (mvtflow/).  CPU wheels are enough to reproduce the reported
+# AUROC 0.854; a GPU only makes training faster.  Must be >= 2.4 for numpy 2.x.
+torch==2.4.1
+
+# Reads voraus-ad-dataset-100hz.parquet.  Not needed if you only use the
+# evidence records shipped in data/, which cover every result except the
+# detector's own AUROC / AU-PR.
+pyarrow==24.0.0
+
+# Rigid-body contact simulation.  Needed only by `sim_experiments.py --c`, the
+# collision half of the instantiation-count sweep.  Everything else runs
+# without it; drop this line if you do not need that one experiment.
+mujoco==3.11.0
