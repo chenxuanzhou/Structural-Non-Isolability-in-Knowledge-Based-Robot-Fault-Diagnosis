@@ -19,10 +19,8 @@ import numpy as np
 from matplotlib.patches import Rectangle
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent.parent
+ROOT = HERE                      # this file now lives at the repository root
 RESULTS = ROOT / "results"
-OUT = HERE / "figures"
-OUT.mkdir(exist_ok=True)
 sys.path.insert(0, str(ROOT / "pipeline"))
 
 # ---------------------------------------------------------------------------
