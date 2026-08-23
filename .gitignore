@@ -1,0 +1,26 @@
+# --- Python -------------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- The dataset: public, and deliberately not redistributed here --------------
+# Download voraus-ad-dataset-100hz.parquet and place it in data/.
+data/*.parquet
+data/voraus_df.pkl
+
+# --- Regenerable binaries ------------------------------------------------------
+mvtflow/checkpoints/*.pt
+
+# --- Never commit third-party PDFs --------------------------------------------
+# The figures/ exception keeps this repository's own vector figures.
+*.pdf
+!figures/*.pdf
+
+# --- Editor / OS ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
