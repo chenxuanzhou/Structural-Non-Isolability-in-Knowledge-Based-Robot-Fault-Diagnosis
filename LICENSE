@@ -22,7 +22,9 @@ SOFTWARE.
 
 ---------------------------------------------------------------------------
 Scope: the MIT License above covers the code in this repository only. The
-dataset-derived material in data/ and results/ is an adaptation of the
+dataset-derived material in data/, results/, pipeline/repair_adopted.json and
+figures/ (except fig_signatures.*, which plots only the knowledge base) is an
+adaptation of the
 voraus-AD dataset (rights holder voraus robotik GmbH), which is licensed under
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
 (CC BY-NC-SA 4.0, https://creativecommons.org/licenses/by-nc-sa/4.0/); that

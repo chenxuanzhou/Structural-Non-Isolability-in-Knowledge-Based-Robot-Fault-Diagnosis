@@ -1243,6 +1243,8 @@ def adopt(results_path=RESULTS_OUT, out=ADOPTED_PATH, verbose=True):
         y = np.array([cycles[i]["category"] for i in ids])
         sc = StandardScaler().fit(X)
         clf = LogisticRegression(max_iter=2000).fit(sc.transform(X), y)
+        fx = res.get("fixed_configuration", {})
+        frozen_acc = fx.get("cluster_acc") if fx.get("dims") == dims else None
         clusters[rep[cert["members"][0]]] = {
             "cluster_name": name,
             "members": cert["members"],
@@ -1261,7 +1263,11 @@ def adopt(results_path=RESULTS_OUT, out=ADOPTED_PATH, verbose=True):
                               default="deployed"),
             "certificate_cost_class": cert["cost_class"],
             "evidence": {"protocol": "leave-setting-out, 5 stratified splits",
+                         # the searched certificate (dims re-selected per split)
                          "held_out_acc": cert["acc_test"],
+                         # these frozen dims, same splits, when they are the
+                         # fixed configuration repair.py evaluates
+                         "frozen_dims_held_out_acc": frozen_acc,
                          "deployed_repr_acc": cert["acc_deployed_repr"],
                          "majority": cert["acc_majority"],
                          "permuted": cert["acc_permuted"]},

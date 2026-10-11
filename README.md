@@ -94,8 +94,9 @@ cd pipeline && python distinguishability.py
 ```
 
 Structural twin clusters, route assignment, cluster accuracy and the
-margin-based abstention. Add `--probe` for the separability test that shows the
-clusters are a property of the representation rather than of the robot.
+margin-based abstention. Add `--probe` (needs the parquet) for the separability
+test that shows the clusters are a property of the representation rather than of
+the robot.
 
 ```bash
 cd pipeline && python repair.py --control --labels --sensitivity
@@ -113,8 +114,10 @@ Held-out validation of the retrieval weights over five stratified splits.
 
 The results that need the full dataset are the detector's own AUROC, AU-PR and
 operating point (TPR / FPR), because the detector is trained on raw telemetry
-(`mvtflow/`), and the semi-synthetic instantiation sweep (`synth_power.py`),
-which injects faults into raw normal cycles.
+(`mvtflow/`); the semi-synthetic instantiation sweep (`synth_power.py`), which
+injects faults into raw normal cycles; the full-chain run over all 755
+anomalies (`integration_test.py`), which rebuilds the evidence records from raw
+telemetry; and the separability probe (`distinguishability.py --probe`).
 
 ---
 
@@ -150,8 +153,8 @@ written by hand.
 | Held-out retrieval weights | `pipeline/held_out_eval.py` | `results/held_out_seeds.json` |
 | Instantiation-count sweep, gripping pair (needs the parquet) | `pipeline/synth_power.py` | `results/synth_instantiation_power.json` |
 | Instantiation-count sweep, collision pair | `pipeline/sim_experiments.py --c` | `results/sim_collision_power.json` |
-| Full-chain retrieval over all 755 anomalies | `pipeline/integration_test.py` | `results/integration_results.csv` |
-| Detector-gradient cross-check (a negative result) | `pipeline/eval_retrieve.py` (`audit_gradient_crosscheck()`; reads the interface's per-cycle cache `shared/cache/dataset_all.json`, which is not shipped) | `results/gradient_crosscheck.json` |
+| Full-chain retrieval over all 755 anomalies (needs the parquet) | `pipeline/integration_test.py` | `results/integration_results.csv` |
+| Detector-gradient cross-check (a negative result) | `pipeline/eval_retrieve.py --gradient` (reads the interface's per-cycle cache `shared/cache/dataset_all.json`, which is not shipped) | `results/gradient_crosscheck.json` |
 | Detector AUROC, AU-PR, TPR / FPR (needs the parquet) | `mvtflow/train.py` | `results/detector_metrics.json` (written on training; not shipped) |
 
 Figures are rebuilt from those JSON files:
@@ -200,7 +203,7 @@ data/              derived evidence records; see Data above
 results/           every reported number, as JSON
 figures/           vector PDFs, rebuilt by make_figures.py
 voraus-AD_data_source_and_licence_record.pdf   provenance and licence record for the dataset
-tools/             ifacconf_local.cls, a stand-in for IFAC's class (see below)
+tools/             ifacconf_local.cls, a stand-in for IFAC's class (see the build note above)
 ```
 
 Not every file in `pipeline/` is used by the analysis above. `kb_console.py`,
@@ -244,12 +247,14 @@ cross-validation of the greedy search is grouped as well.
 
 Code is released under the MIT License (`LICENSE`).
 
-Derived data in `data/` and `results/` is an adaptation of the voraus-AD dataset
+Derived data in `data/`, `results/` and `pipeline/repair_adopted.json` (a
+classifier fitted on voraus-AD cycles), and the figures in `figures/` drawn from
+`results/` (all but `fig_signatures`), are an adaptation of the voraus-AD dataset
 (Brockmann, Rudolph, Rosenhahn and Wandt, *The voraus-AD dataset for anomaly
 detection in robot applications*, IEEE Transactions on Robotics; rights holder
 voraus robotik GmbH), which is licensed under
 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Its
-ShareAlike and NonCommercial terms carry over, so the derived data is released
+ShareAlike and NonCommercial terms carry over, so this material is released
 under CC BY-NC-SA 4.0 too: non-commercial use only, with attribution, and
 adaptations under the same licence. It contains per-cycle values and labels
 computed from `voraus-ad-dataset-100hz.parquet`; the dataset itself is not

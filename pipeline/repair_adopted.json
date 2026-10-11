@@ -510,9 +510,11 @@
       ],
       "n_fit_cycles": 310,
       "cost_class": "free",
+      "certificate_cost_class": "pipeline",
       "evidence": {
         "protocol": "leave-setting-out, 5 stratified splits",
         "held_out_acc": 0.8402097942394168,
+        "frozen_dims_held_out_acc": 0.8685083109746812,
         "deployed_repr_acc": 0.561503908995622,
         "majority": 0.5041039818014947,
         "permuted": 0.4305279016254673

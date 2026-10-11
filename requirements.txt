@@ -19,8 +19,10 @@ torch==2.4.1
 
 # Reads voraus-ad-dataset-100hz.parquet.  Not needed if you only use the
 # evidence records shipped in data/, which cover every result except the
-# detector's own AUROC / AU-PR / TPR / FPR (mvtflow/) and the semi-synthetic
-# instantiation sweep (pipeline/synth_power.py).
+# detector's own AUROC / AU-PR / TPR / FPR (mvtflow/), the semi-synthetic
+# instantiation sweep (pipeline/synth_power.py), the full-chain run
+# (pipeline/integration_test.py) and the separability probe
+# (distinguishability.py --probe).
 pyarrow==24.0.0
 
 # Rigid-body contact simulation.  Needed only by `sim_experiments.py --c`, the

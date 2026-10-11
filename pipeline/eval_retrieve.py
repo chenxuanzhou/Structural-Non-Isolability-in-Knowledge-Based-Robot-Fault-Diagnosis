@@ -10,6 +10,7 @@ ranking WITHOUT re-running the full pipeline each time.
 from __future__ import annotations
 import json
 import os
+import sys
 import numpy as np
 import pandas as pd
 
@@ -369,7 +370,8 @@ def audit_gradient_crosscheck(verbose=True):
     import math
     cache = os.path.join(_ROOT, "shared", "cache", "dataset_all.json")
     if not os.path.exists(cache):
-        print("shared/cache/dataset_all.json missing — run shared/data_prep.py --all")
+        print("shared/cache/dataset_all.json missing — it is the interface's per-cycle "
+              "cache and is not part of this repository")
         return None
     with open(cache, encoding="utf-8") as f:
         cycles = json.load(f)["cycles"]
@@ -406,6 +408,14 @@ def audit_gradient_crosscheck(verbose=True):
 
 
 if __name__ == "__main__":
+    if "--gradient" in sys.argv:
+        out = audit_gradient_crosscheck()
+        if out is not None:
+            path = os.path.join(_ROOT, "results", "gradient_crosscheck.json")
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(out, f, indent=2)
+            print(f"written -> {path}")
+        sys.exit(0)
     recs = load_cache()
     from line_kg import retrieve as retrieve_production
     score(retrieve_production, recs, name="PRODUCTION retrieve() (refined, 2026-07-20)")
