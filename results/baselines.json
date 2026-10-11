@@ -122,5 +122,60 @@
   },
   "cluster_invariant": true
  },
+ "tiebreak_grouped": {
+  "protocol": "leave-setting-out, five splits, held-out half; same splits as Table 1",
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "n_test": [
+   396,
+   392,
+   414,
+   364,
+   403
+  ],
+  "draws": 200,
+  "declaration_order": 0.16914497154929936,
+  "alphabetical": 0.2003280791649856,
+  "reverse_declaration": 0.14385526092598827,
+  "random_mean": 0.1588604693938044,
+  "random_sd": 0.027416319016981768,
+  "random_min": 0.1186247255271499,
+  "random_max": 0.2003280791649856,
+  "all_orderings_min": 0.1186247255271499,
+  "all_orderings_max": 0.2003280791649856,
+  "interval_width": 0.08170335363783571,
+  "oracle_ceiling": 0.2810863138953702,
+  "declaration_per_split": [
+   0.16414141414141414,
+   0.1683673469387755,
+   0.15217391304347827,
+   0.19230769230769232,
+   0.1687344913151365
+  ],
+  "declaration_ci95": 0.018100895606136265,
+  "declaration_split_range": 0.04013377926421405,
+  "within_split_width": [
+   0.07575757575757575,
+   0.07908163265306123,
+   0.09903381642512077,
+   0.08516483516483517,
+   0.06947890818858561
+  ],
+  "within_split_width_mean": 0.0817033536378357,
+  "prior_top1": 0.18669464787978113,
+  "frac_orderings_at_or_above_prior": 0.18226600985221675,
+  "cluster_by_tiebreak": {
+   "declaration": 0.34244700233980935,
+   "alphabetical": 0.34244700233980935,
+   "reverse": 0.34244700233980935
+  },
+  "cluster_invariant": true,
+  "cluster_invariant_over": "203 orderings x 5 splits"
+ },
  "note": "Trivial baselines the published evaluation omitted. The prevalence prior beats the retrieval on every ranking metric; balanced recall is where the retrieval and the repair still show an effect; the tie-break interval bounds what a single top-1 number can mean when 68% of cycles tie at rank 1."
 }

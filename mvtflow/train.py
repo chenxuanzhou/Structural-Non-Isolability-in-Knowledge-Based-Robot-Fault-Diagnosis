@@ -1,6 +1,8 @@
 """Train MVT-Flow on normal cycles, calibrate a threshold, save a checkpoint,
-and evaluate the detector (AUROC + AU-PR) on the official test split."""
+and evaluate the detector (AUROC + AU-PR) on the official test split.
+The evaluation is also written to results/detector_metrics.json."""
 from __future__ import annotations
+import json
 import os
 import numpy as np
 import torch
@@ -92,6 +94,26 @@ def train(cfg: Config):
         "test_tpr_recal": tpr_recal, "test_fpr_recal": fpr_recal,
     }, os.path.join(cfg.out_dir, "mvtflow.pt"))
     print(f"saved checkpoint. threshold(95th val NLL) = {threshold:.2f}")
+
+    # The checkpoint is not committed (*.pt is gitignored), so the numbers the
+    # paper quotes from this run also go to results/, next to every other one.
+    metrics = {
+        "n_channels": C, "seed": cfg.seed, "epochs": cfg.epochs,
+        "n_test": int(len(y)), "n_test_anomaly": int((y == 1).sum()),
+        "n_test_normal": int((y == 0).sum()),
+        "auroc": auroc, "aupr": aupr,
+        "pre_a_val_threshold": {"tpr": tpr, "fpr": fpr},
+        "recalibrated_threshold": {
+            "rule": "95th percentile of a calibration half of the held-out normal "
+                    "cycles; FPR on the other half, TPR on every anomalous cycle",
+            "n_cal": int(len(cal_idx)), "n_eval_normal": int(len(evaln_idx)),
+            "tpr": tpr_recal, "fpr": fpr_recal},
+    }
+    results = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                           "results", "detector_metrics.json")
+    with open(results, "w", encoding="utf-8") as fh:
+        json.dump(metrics, fh, indent=1)
+    print(f"written -> {results}")
     return model, ds, threshold
 
 

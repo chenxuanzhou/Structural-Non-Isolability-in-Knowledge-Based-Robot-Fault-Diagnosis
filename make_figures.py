@@ -1,11 +1,20 @@
-"""Figure builder for the AEI manuscript.
+"""Figure builder for the SAFEPROCESS 2027 paper and its long version.
 
 Every figure reads from results/*.json or from pipeline/line_kg.py, so no number
 in a figure can drift from the number in the text.  Vector PDF out, sized for a
-single Elsevier column (3.5 in) or the full width (7.0 in).
+single column (3.5 in) or the full width (7.0 in).
 
-Run from anywhere:
-    ..\..\.venv\Scripts\python.exe make_figures.py
+The six-page SAFEPROCESS paper (safeprocess2027_final.tex) has room for two
+figures, so it uses only the most important ones and merges where it can:
+    Fig. 1  fig_teaser       tie-break interval + balanced recall, merged
+    Fig. 2  fig_signatures   structural signatures
+The remaining figures (protocol, certificates, power, granularity, label budget)
+belong to the long version; their numbers appear in the short paper's tables
+and text instead.
+
+Run from anywhere; name figures to build only those:
+    python make_figures.py                  # every figure
+    python make_figures.py fig_teaser       # just Fig. 1
 """
 from __future__ import annotations
 
@@ -21,6 +30,7 @@ from matplotlib.patches import Rectangle
 HERE = Path(__file__).resolve().parent
 ROOT = HERE                      # this file now lives at the repository root
 RESULTS = ROOT / "results"
+OUT = ROOT / "figures"
 sys.path.insert(0, str(ROOT / "pipeline"))
 
 # ---------------------------------------------------------------------------
@@ -97,6 +107,104 @@ def save(fig, name):
     fig.savefig(path.with_suffix(".png"), dpi=200)
     plt.close(fig)
     print(f"  wrote {path.relative_to(ROOT)}")
+
+
+# ===========================================================================
+# Fig. 1 (SAFEPROCESS) -- the measurement, two panels merged into one figure.
+# Left: the tie-break interval against the group answer.  Right: balanced
+# recall, the one reading a constant predictor cannot game.  Every value on
+# the left is a five-split leave-setting-out mean on the splits of Table 1, so
+# the prior rules are the same population as the marks, not a scale reference.
+# ===========================================================================
+def fig_teaser():
+    b = load("baselines.json")
+    tb = b["tiebreak_grouped"]
+    pr = b["prior_vs_retrieval"]
+    br = b["balanced_recall"]
+
+    style = {"font.family": "sans-serif", "font.sans-serif": ["DejaVu Sans"],
+             "font.size": 7.5, "axes.labelsize": 7.5, "axes.titlesize": 8,
+             "xtick.labelsize": 7.5, "ytick.labelsize": 7.5}
+    with mpl.rc_context(style):
+        fig, (ax, bx) = plt.subplots(
+            1, 2, figsize=(7.0, 2.6),
+            gridspec_kw=dict(width_ratios=[1.0, 0.72], wspace=0.55))
+
+        # -- left: point answer (top-1) against group answer (cluster top-1) --
+        y_pt, y_cl = 1.0, 0.0
+        lo, hi = tb["random_min"], tb["random_max"]
+        ax.add_patch(Rectangle((lo, y_pt - 0.09), hi - lo, 0.18,
+                               facecolor=FILL_NEUTRAL, edgecolor="none", zorder=1))
+        for x in (lo, hi):
+            ax.plot([x, x], [y_pt - 0.09, y_pt + 0.09], color=INK_2, lw=1.0, zorder=2)
+        for key, ms in (("reverse_declaration", 5), ("alphabetical", 5),
+                        ("declaration_order", 7.5)):
+            ax.plot(tb[key], y_pt, "o", ms=ms, color=BLUE, mec="white",
+                    mew=1.2, zorder=4)
+        ax.plot(tb["oracle_ceiling"], y_pt, "o", ms=6.5, mfc="white", mec=INK_2,
+                mew=1.8, zorder=4)
+        ax.annotate("", xy=(lo, y_pt + 0.24), xytext=(hi, y_pt + 0.24),
+                    arrowprops=dict(arrowstyle="<->", color=BLUE, lw=1.2))
+        ax.annotate(f"{tb['interval_width']:.3f} wide", ((lo + hi) / 2, y_pt + 0.29),
+                    ha="center", va="bottom", color=BLUE)
+
+        ax.plot(tb["cluster_by_tiebreak"]["declaration"], y_cl, "o", ms=7.5,
+                color=BLUE, mec="white", mew=1.2, zorder=4)
+        ax.annotate(f"same under all {tb['draws'] + 3} orderings",
+                    (tb["cluster_by_tiebreak"]["declaration"], y_cl),
+                    xytext=(-9, 0), textcoords="offset points", ha="right",
+                    va="center", fontsize=7, color=BLUE)
+
+        for x, y in ((pr["prevalence_prior"]["top1"], y_pt),
+                     (pr["cluster_majority"], y_cl)):
+            ax.plot([x, x], [y - 0.17, y + 0.17], ls=(0, (2.5, 1.5)),
+                    color=CRITICAL, lw=1.6, zorder=3)
+            ax.annotate("prior", (x, y - 0.19), ha="center", va="top",
+                        fontsize=7, color=CRITICAL)
+
+        ax.annotate("point answer (top-1)", (0.01, y_pt + 0.62),
+                    xycoords=("axes fraction", "data"), va="center")
+        ax.annotate("group answer (cluster top-1)", (0.01, y_cl + 0.48),
+                    xycoords=("axes fraction", "data"), va="center")
+        ax.set_xlim(0.05, 0.46)
+        ax.set_ylim(-0.62, 1.82)
+        ax.set_xticks([0.1, 0.2, 0.3, 0.4])
+        ax.set_yticks([])
+        ax.set_xlabel("accuracy (five-split mean)")
+        ax.set_title("The point answer is not determined; the group is",
+                     loc="left", pad=6)
+        tidy(ax, xgrid=True)
+        ax.spines["left"].set_visible(False)
+        ax.spines["bottom"].set_color(INK)
+
+        # -- right: balanced recall -------------------------------------------
+        arms = [("prevalence prior", "prior (constant)", MUTED),
+                ("retrieval", "retrieval", BLUE),
+                ("two-stage + repair", "two-stage", BLUE),
+                ("flat control", "flat control", ORANGE)]
+        ys = np.arange(len(arms))[::-1]
+        for y, (lab, key, col) in zip(ys, arms):
+            v = br[key]["macro"]
+            bx.barh(y, v, height=0.52, color=col, edgecolor="none", zorder=2)
+            bx.annotate(f"{v:.3f}", (v, y), xytext=(4, 0), textcoords="offset points",
+                        va="center", ha="left")
+        u = br["uniform_macro"]
+        bx.axvline(u, color=INK_2, ls=(0, (2.5, 1.5)), lw=1.4, zorder=3)
+        bx.annotate("uniform over 12 (1/12)", (u, len(arms) - 0.45), xytext=(4, 0),
+                    textcoords="offset points", va="center", fontsize=7,
+                    color=MUTED)
+        bx.set_yticks(ys)
+        bx.set_yticklabels([a[0] for a in arms])
+        bx.set_xlim(0, 0.52)
+        bx.set_ylim(-0.6, len(arms) - 0.1)
+        bx.set_xticks([0.0, 0.1, 0.2, 0.3, 0.4, 0.5])
+        bx.set_xlabel("balanced recall")
+        bx.set_title("Balanced recall restores the ordering", loc="right", pad=6)
+        tidy(bx, xgrid=True)
+        bx.tick_params(axis="y", length=0)
+        bx.spines["left"].set_visible(False)
+        bx.spines["bottom"].set_color(INK)
+        save(fig, "fig_teaser.pdf")
 
 
 # ===========================================================================
@@ -497,12 +605,17 @@ def fig_label_budget():
     save(fig, "fig_label_budget.pdf")
 
 
+FIGURES = {f.__name__: f for f in (fig_teaser, fig_signatures, fig_protocol,
+                                   fig_certificates, fig_power, fig_granularity,
+                                   fig_label_budget)}
+
 if __name__ == "__main__":
+    wanted = sys.argv[1:] or list(FIGURES)
+    unknown = [w for w in wanted if w not in FIGURES]
+    if unknown:
+        sys.exit(f"unknown figure(s) {unknown}; choose from {list(FIGURES)}")
+    OUT.mkdir(exist_ok=True)
     print("building figures ->", OUT)
-    fig_signatures()
-    fig_protocol()
-    fig_certificates()
-    fig_power()
-    fig_granularity()
-    fig_label_budget()
+    for name in wanted:
+        FIGURES[name]()
     print("done")

@@ -105,7 +105,7 @@ def sweep(cycles, columns, verbose=True):
     rows = []
     for n_inst in N_GRID:
         got_verdict = validated = adopted = 0
-        accs, trials = [], 0
+        accs, deps, inner, inner_dep, trials = [], [], [], [], 0
         for seed in SEEDS:
             fit, test = _split_instantiations(cycles, n_inst, seed)
             y_fit = np.array([cycles[i]["category"] for i in fit])
@@ -123,18 +123,28 @@ def sweep(cycles, columns, verbose=True):
                 got_verdict += 1
                 adopted += bool(cert["adopted"])
                 accs.append(cert["acc_test"])
+                # The baseline the adoption rule compares against, recorded so a
+                # reject at ~0.99 can be read off rather than inferred.
+                deps.append(cert["acc_deployed_repr"])
+                inner.append(cert["inner_cv_fit"])
+                inner_dep.append(cert["inner_cv_deployed_repr"])
         rows.append({"n_instantiations": n_inst, "trials": trials,
                      "search_validated": validated / max(trials, 1),
                      "verdict_rate": got_verdict / max(trials, 1),
                      "adopt_rate_given_verdict": (adopted / got_verdict) if got_verdict else None,
                      "acc_test_mean": float(np.mean(accs)) if accs else None,
-                     "acc_test_sd": float(np.std(accs)) if len(accs) > 1 else None})
+                     "acc_test_sd": float(np.std(accs)) if len(accs) > 1 else None,
+                     "acc_deployed_mean": float(np.mean(deps)) if deps else None,
+                     "inner_cv_fit_mean": float(np.mean(inner)) if inner else None,
+                     "inner_cv_deployed_mean": float(np.mean(inner_dep)) if inner_dep else None})
         if verbose:
             r = rows[-1]
             acc = f"{r['acc_test_mean']:.3f}" if r["acc_test_mean"] is not None else "  -- "
             print(f"  N={n_inst:>3}  grouped search runs {r['search_validated']:.0%}"
                   f"   verdict {r['verdict_rate']:.0%}"
                   f"   held-out {acc}"
+                  + (f" (deployed {r['acc_deployed_mean']:.3f})"
+                     if r["acc_deployed_mean"] is not None else "")
                   + (f"   adopt {r['adopt_rate_given_verdict']:.0%}"
                      if r["adopt_rate_given_verdict"] is not None else ""))
     return rows

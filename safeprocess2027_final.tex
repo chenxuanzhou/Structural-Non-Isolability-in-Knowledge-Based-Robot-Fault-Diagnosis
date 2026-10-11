@@ -7,7 +7,9 @@
 % Do not anonymise.
 %
 % BUILD
-%   pdflatex safeprocess2027 && pdflatex safeprocess2027
+%   pdflatex safeprocess2027_final && pdflatex safeprocess2027_final
+%   Fig. 1 (figures/fig_teaser.pdf) and Fig. 2 (figures/fig_signatures.pdf) are
+%   built by make_figures.py at the repository root.
 %
 % CLASS FILE
 %   ifacconf.cls ships from IFAC, not from CTAN/TeX Live:
@@ -23,9 +25,13 @@
 %   detector paragraph.
 %
 % PROVENANCE
-%   Every number here is carried over unchanged from the long version
-%   (paper_aei.tex) and traces to results/*.json.  Do not edit numbers here;
-%   fix them upstream and re-copy.
+%   Every number here traces to results/*.json, except the detector's AUROC,
+%   TPR and FPR in Sec. 3, which mvtflow/train.py computes from the raw parquet
+%   and writes to results/detector_metrics.json.  Most numbers are carried over
+%   from the long version (paper_aei.tex).  The exception is the tie-break
+%   sweep: Sec. 5.2, Fig. 1 and the abstract use its leave-setting-out version
+%   (results/baselines.json, key "tiebreak_grouped"), on the same five splits as
+%   Table 1; the long version still quotes the full-set sweep (key "tiebreak").
 %==============================================================================
 \documentclass{ifacconf}
 
@@ -75,7 +81,7 @@ ranking metric, so the customary lift over uniform chance is an artefact of the
 reference. Second, permuting only the order in which failure modes are declared
 moves the reported top-1 across an interval $0.082$ wide, more than twice the
 spread the validation protocol itself contributes, while the cluster assignment
-is invariant at $0.340$ under every ordering we tried. Third, the
+is invariant at $0.342$ under every ordering we tried. Third, the
 protocol decides deployment: the benchmark's \texttt{setting} values are
 repeated instantiations
 of single physical faults, and under an ungrouped split the identical pipeline
@@ -153,11 +159,12 @@ anomaly-detection benchmarks in particular have been shown to overstate progress
 depends on an arbitrary rule. The band spans $200$ random orderings of the
 knowledge base's mode declarations, the filled markers the reverse, declaration
 and alphabetical orderings, the open marker an oracle bounding what any tie-break
-could achieve. Its \emph{width} is the claim: the dashed rules are five-split
-means from a different population, drawn for scale only. The group assignment
-below does not move at all. \emph{Right:} against balanced recall (the mean of
-twelve per-category recalls, which no constant predictor can inflate) the
-ordering is restored and the repair carries information the prior does not.}
+could achieve. Every mark is a five-split mean on the splits of
+Table~\ref{tab:baselines}, as are the dashed priors, and the band contains the
+prior. The group assignment below does not move at all. \emph{Right:} against
+balanced recall (the mean of twelve per-category recalls, which no constant
+predictor can inflate) the ordering is restored and the repair carries
+information the prior does not.}
 \label{fig:teaser}
 \end{figure*}
 
@@ -225,8 +232,8 @@ fault instantiation repeated for $4$--$20$ cycles, median $10$.
 telemetry \citep{voraus}, one instance of the density-estimation family surveyed
 by \citet{ruff}. We use a light CPU flow over $46$ measured channels, reaching
 AUROC $0.854$ and, with the threshold set at the $95$th percentile of a
-calibration half of the held-out normal cycles, TPR $0.601$ at FPR $0.071$ on
-the disjoint evaluation half; the $0.05$ the calibration fixes holds in sample
+calibration half of the held-out normal cycles, TPR $0.601$ and, on the
+disjoint evaluation half, FPR $0.071$; the $0.05$ the calibration fixes holds in sample
 only. This is below the $0.936$
 reported for the original model; the gap is architectural rather than
 informational, and detection accuracy is not this paper's claim. Every result
@@ -243,8 +250,8 @@ Jaccard overlap of manifesting families gated by affected joints, an
 inverse-document-frequency-weighted signal evidence term, phase agreement and
 manifest coverage. Weights are fixed a priori; re-tuning them on a stratified
 $50/50$ fit half over five seeds converges to the same weights on $5/5$ seeds and
-gives held-out top-1 $0.158 \pm 0.004$ seed to seed, so what follows is not
-tuning on test.
+gives held-out top-1 $0.158 \pm 0.006$ ($95\%$ interval over seeds), so what
+follows is not tuning on test.
 
 %==============================================================================
 \section{Structural indistinguishability}
@@ -283,7 +290,7 @@ cluster-margin test applied before a cluster-size test, the reject option of
 fall below the margin and are declared \emph{cluster-undetermined}, $134$
 ($17.7\%$) have a rank-1 mode alone in its group and are \emph{decisive}, and
 $499$ ($66.1\%$) are \emph{human-resolvable}. Cluster accuracy by route is
-$0.180$, $0.187$ and $0.421$ in that order, reproducing the single-split cluster
+$0.180$, $0.187$ and $0.421$ in that order, reproducing the full-set cluster
 accuracy of $0.340$ exactly when weighted by route size;
 Table~\ref{tab:baselines} gives the corresponding five-split mean,
 $0.342 \pm 0.025$. The two are the same quantity over different populations, and
@@ -350,34 +357,31 @@ literature reports.
 \subsection{The tie-break interval}
 \label{sec:tiebreak}
 
-% FIXME(P0) -- the sweep below runs on the full 755-cycle anomaly set with the
-% retrieval weights fixed a priori, whereas Table 1 reports five-split
-% leave-setting-out means.  Different populations, so the comparison with the
-% prior is one of scale rather than an exact one, and the text now says so.  The
-% correct fix is to re-run the 200-ordering sweep under leave-setting-out so that
-% Sec. 5, Table 1 and Fig. 1 all live on one protocol -- one script run.  Do it
-% before 31 October and restate this paragraph and Fig. 1's caption.
+% The sweep runs on the five leave-setting-out splits of Table 1, so Sec. 5,
+% Table 1 and Fig. 1 share one protocol (results/baselines.json,
+% "tiebreak_grouped").  The full-set sweep is kept under "tiebreak".
 Which member of a tied set is reported is not determined by the ranking. In our
 implementation it is determined by the order the modes happen to be declared in
-the knowledge base. Varying only that order, on the full anomaly set with the
-retrieval weights fixed a priori (Fig.~\ref{fig:teaser}, left): the deployed
-declaration order gives $0.163$, alphabetical $0.199$, reverse declaration
-$0.144$, and $200$ random orderings give $0.156 \pm 0.028$, range
-$[0.117, 0.199]$. An oracle that always picks the correct member of the tied set
-reaches $0.280$, which bounds what any tie-breaking rule could achieve.
+the knowledge base. Varying only that order, on the five leave-setting-out
+splits of Table~\ref{tab:baselines} with the retrieval weights fixed a priori
+(Fig.~\ref{fig:teaser}, left): the deployed declaration order gives the
+tabulated $0.169$, alphabetical $0.200$, reverse declaration $0.144$, and $200$
+random orderings give mean $0.159$, s.d.\ $0.027$, range $[0.119, 0.200]$. An
+oracle that always picks the correct member of the tied set reaches $0.281$,
+which bounds what any tie-breaking rule could achieve.
 
-The interval is $0.082$ wide. The same quantity varies by $\pm 0.018$ across
-leave-setting-out splits (Section~\ref{sec:repair}), so the arbitrary rule
+The interval is $0.082$ wide. The same five-split mean has a $95\%$ interval of
+$\pm 0.018$ across splits (Section~\ref{sec:repair}), so the arbitrary rule
 contributes more than twice the spread the validation protocol does, and the
 third decimal of a reported top-1 on this benchmark is not a property of the
 method. Both spreads, $0.036$ across splits and $0.082$ across orderings, exceed
 the $0.018$ by which the deployed retrieval trails the prevalence prior in
-Table~\ref{tab:baselines}: an arbitrary list order moves the number further than
-the margin these comparisons turn on.
+Table~\ref{tab:baselines}, and the interval contains the prior: alphabetical
+order alone would put the retrieval ahead of it.
 
 This is the paper's thesis in numerical form. It has a positive counterpart:
-the \emph{cluster} assignment is tie-break
-invariant, at $0.340$ under all three orderings, because the ties lie inside
+the \emph{cluster} assignment is tie-break invariant, at $0.342$ under all
+$203$ orderings on every split, because the ties lie inside
 groups and never across them. What the representation determines is the group,
 not the point answer.
 
@@ -435,8 +439,9 @@ Table~\ref{tab:cert} gives the four verdicts, and we distinguish the three
 non-positive ones because they are not the same claim.
 \textbf{Adopted}: the load-torque group is separated at $0.840$ on held-out
 instantiations against $0.562$ for the deployed representation, a $0.504$
-majority floor and $0.431$ under permuted labels, on all five splits, using
-signed deviation and within-cycle step, both free.
+majority floor and $0.431$ under permuted labels, on all five splits. The search
+re-selects per split, mostly signed deviation and within-cycle step (free); the
+unread channels enter on two splits, so the cost class is \emph{pipeline}.
 \textbf{Inconclusive}: distal collision has too few fault instantiations for the
 grouped inner search to run, so its $0.776$ comes from the pre-registered
 free-cost dimension set rather than from a search. It exceeds the $0.718$
@@ -540,7 +545,8 @@ circularity at the source and claim only a property of the protocol.
 On the gripping pair, $N \le 3$ instantiations leave the grouped inner search
 unable to run; at $N = 4$--$6$ it runs but the verdict flips between draws; from
 $N \ge 8$ it is stable. Note, though, what it stabilises \emph{on}: reject. The
-deployed representation already separates the injected pair at $\approx 0.99$, so
+repaired representation scores $\approx 0.99$ on the injected pair and the
+deployed one already comes within the adoption margin of it, so
 whether the same threshold governs an \emph{adopt} verdict is untested. The collision pair reaches
 the run threshold at the same $N \ge 4$ but is still flipping at $N = 16$.
 voraus-AD supplies $N = 1$ per gripping mode and $N = 3$ for carton collision,
@@ -574,7 +580,7 @@ What follows is a change of output form. Report the
 non-isolable group; ask which discarded dimension would separate it; issue the
 answer as a certificate carrying held-out evidence, controls and a cost class,
 inactive until authorised. One of four groups clears that bar on real data. The
-same analysis bounds the gain: cluster accuracy is $0.340$, so resolving every
+same analysis bounds the gain: cluster accuracy is $0.342$, so resolving every
 tie perfectly would not carry end-to-end accuracy past it, and the errors are not
 confined to the groups that generate the ties.
 
