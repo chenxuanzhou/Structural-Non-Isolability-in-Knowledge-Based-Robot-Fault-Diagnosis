@@ -1,0 +1,717 @@
+%==============================================================================
+% 13th IFAC Symposium on Fault Detection, Supervision and Safety for Technical
+% Processes (SAFEPROCESS 2027), Delft, 29 June - 2 July 2027.
+% Paper deadline: 31 October 2026.  Submission via https://ifac.papercept.net
+%
+% IFAC uses SINGLE-BLIND review: author names and affiliations stay on the paper.
+% Do not anonymise.
+%
+% BUILD
+%   pdflatex safeprocess2027 && pdflatex safeprocess2027
+%
+% CLASS FILE
+%   ifacconf.cls ships from IFAC, not from CTAN/TeX Live:
+%     https://www.ifac-control.org/conferences/author-guide
+%   The ifacconf.cls sitting next to this file is a LOCAL APPROXIMATION written
+%   only so the draft could be compiled and page-counted.  Delete it and drop in
+%   the official class; this source needs no other change.  Verify the page
+%   count again after you do -- the official geometry will differ.
+%
+% LENGTH
+%   6 pages final, up to 8 for review.  Cut list if over, in this order:
+%   Sec. 7 granularity paragraph, then Table 2's permuted column, then Sec. 3's
+%   detector paragraph.
+%
+% PROVENANCE
+%   Every number here is carried over unchanged from the long version
+%   (paper_aei.tex) and traces to results/*.json.  Do not edit numbers here;
+%   fix them upstream and re-copy.
+%==============================================================================
+\documentclass{ifacconf}
+
+% T1 fixes the accented surnames in the bibliography: under OT1 the accent and
+% the base letter are separate glyphs in the PDF text layer, which breaks
+% full-text search and author indexing on IFAC-PapersOnLine.
+% lmodern is NOT optional alongside it.  With T1 and no Type 1 EC fonts on the
+% system, LaTeX silently falls back to METAFONT bitmaps, the PDF carries Type 3
+% fonts, and PaperCept refuses the upload ("Bitmapped Font error").  It also
+% restores the fi/fl/ff ligatures in the PDF text layer.
+% VERIFY WITH: pdffonts safeprocess2027.pdf  -- there must be no "Type 3" row.
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+% the repository URL is long and lives in a narrow column; let it break anywhere
+\usepackage{xurl}
+\graphicspath{{figures/}}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis:
+Tie-Break Intervals and Grouped Validation}
+
+% IFAC is single-blind: author names and affiliations stay on the paper.
+% CHECK: confirm how the second author prefers to be listed (Christy Jie Liang
+% vs Jie Liang) and whether a School-level line should replace the Faculty one.
+% TODO: if the work is funded, IFAC puts the acknowledgement in \thanks{} on the
+% title, e.g. \title{...}\thanks{This work was supported by ...}
+\author[uts]{Chenxuan Zhou}
+\author[uts]{Christy Jie Liang}
+\address[uts]{Faculty of Engineering and Information Technology,
+University of Technology Sydney, Ultimo, NSW 2007, Australia
+(e-mail: chenxuan.zhou@student.uts.edu.au, jie.liang@uts.edu.au).}
+
+\begin{abstract}
+Coupling a learned anomaly detector to a line-specific FMEA knowledge base gives
+a robot cell a ranked list of candidate causes. We show that on the public
+voraus-AD benchmark this ranking is structurally unable to isolate: the knowledge
+base's fault signature matrix has repeated columns, and $514$ of $755$ anomalies
+have an exact score tie at rank one. Three measurements follow. First, a
+prevalence prior that reads no evidence outscores the deployed retrieval on every
+ranking metric, so the customary lift over uniform chance is an artefact of the
+reference. Second, permuting only the order in which failure modes are declared
+moves the reported top-1 across an interval $0.082$ wide, more than twice the
+spread the validation protocol itself contributes, while the cluster assignment
+is invariant at $0.340$ under every ordering we tried. Third, the
+protocol decides deployment: the benchmark's \texttt{setting} values are
+repeated instantiations
+of single physical faults, and under an ungrouped split the identical pipeline
+certifies a collision repair at $0.830$ that leave-setting-out validation
+rejects. We therefore report the non-isolable groups rather than breaking them,
+and search a grammar of physically named representation dimensions for the one
+that separates each group, the representation-space analogue of sensor placement
+for isolability. One of four groups is repaired with held-out evidence
+($0.840$ against $0.562$); the others return \emph{inconclusive},
+\emph{undetermined} and \emph{hardware gap}. A flat classifier over the same
+features outscores the whole pipeline on point accuracy, which we report with the
+label budget at which it does so.
+\end{abstract}
+
+% Taken from the SAFEPROCESS official keyword list -- do not substitute
+% free-text terms, PaperPlaza routes the paper to a Technical Committee on the
+% first keyword.
+\begin{keyword}
+Fault isolation and root cause analysis, Structural analysis methods,
+Diagnosability analysis, Knowledge-based diagnosis, Anomaly detection,
+Robotics.
+\end{keyword}
+
+\end{frontmatter}
+
+%==============================================================================
+\section{Introduction}
+%==============================================================================
+
+A learned anomaly detector on robot telemetry reports that a cycle is abnormal.
+It does not report why. The obvious way to close that gap is a line-specific FMEA
+knowledge base: each failure mode declares the joints it affects and the signal
+families in which it manifests, a retrieval function scores the modes against the
+detector's per-signal evidence, and the maintenance technician receives a ranked
+list.
+
+Where no analytical model of the cell exists, data-driven detection is now the
+routine substitute for model-based residual generation, and it brings with it the
+habit of reporting a single accuracy figure against uniform chance. This paper is a measurement of what such
+a ranked list can and cannot decide on the public voraus-AD benchmark
+\citep{voraus}, summarised in Fig.~\ref{fig:teaser}. The result is negative in a specific
+and useful way. The knowledge base's declarations form a fault
+signature matrix in the sense of \citet{blanke}, and that matrix has repeated
+columns: nine of fourteen failure modes share a signature with at least one
+other. Repeated columns are the classical statement of non-isolability, and they
+do not become isolable because the scoring function is continuous. What the
+scoring function does instead is produce an exact tie, in $514$ of $755$
+anomalies, which some arbitrary rule then breaks.
+
+Two things follow that we had not expected and that we believe
+generalise beyond this benchmark.
+
+The first concerns references. Diagnostic accuracy on a skewed benchmark is
+routinely compared with uniform chance. On voraus-AD the correct reference is a
+prevalence prior (rank the modes by how often they occurred in the fit half, then
+emit that same ranking for every cycle), and that prior outscores the deployed
+retrieval on every ranking metric. A reported lift of $2.37\times$ over uniform
+chance is $0.91\times$ against the prior.
+
+The second concerns validation. voraus-AD's \texttt{setting} field indexes
+physical fault instantiations, each repeated over several cycles. Splitting
+cycles at random puts the same instantiation on both sides of the split. We show
+that this does not merely inflate a number: it reverses a deployment decision.
+The same pipeline that adopts a repair to the distal-collision cluster under a
+random split rejects it under leave-setting-out validation, and no permuted-label
+control catches the difference. Leakage of this kind is a documented failure mode
+across machine-learning-based science \citep{kapoor}, and time-series
+anomaly-detection benchmarks in particular have been shown to overstate progress
+\citep{wukeogh}.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_teaser.pdf}
+\caption{The measurement this paper reports. \emph{Left:} the point answer
+depends on an arbitrary rule. The band spans $200$ random orderings of the
+knowledge base's mode declarations, the filled markers the reverse, declaration
+and alphabetical orderings, the open marker an oracle bounding what any tie-break
+could achieve. Its \emph{width} is the claim: the dashed rules are five-split
+means from a different population, drawn for scale only. The group assignment
+below does not move at all. \emph{Right:} against balanced recall (the mean of
+twelve per-category recalls, which no constant predictor can inflate) the
+ordering is restored and the repair carries information the prior does not.}
+\label{fig:teaser}
+\end{figure*}
+
+\emph{Contributions.} (i) A structural indistinguishability analysis of a learned
+diagnostic representation, computed as a fault signature matrix and reported as
+non-isolable groups rather than broken by a tie-break rule. (ii) Two references
+this benchmark's literature has not applied, a prevalence prior and a tie-break
+interval, against which the deployed ranking trails the first and is swamped by
+the second. (iii) A repair that searches physically named representation dimensions
+for the one separating a group, as the representation-space analogue of sensor
+placement, issued as a certificate with held-out evidence, controls and a cost
+class. (iv) Evidence that grouped validation changes deployment decisions, not
+only reported accuracy. (v) A control that outscores our method, with the label
+budget above which it does so.
+
+%==============================================================================
+\section{Fault signatures and isolability}
+%==============================================================================
+
+Structural diagnosability analysis determines which faults a diagnostic system
+can separate before any data is seen, from the incidence structure of the
+residuals against the fault modes \citep{blanke,krysander_mso}. The standard
+object is the fault signature matrix, whose columns are fault modes and whose
+rows are residuals or tests: two modes are non-isolable exactly when their
+columns coincide. The technique has been applied to public process benchmarks in
+this same diagnostic spirit \citep{damadics} and remains active
+\citep{tm_wotawa}; quantitative extensions replace the binary verdict with a
+graded measure of distinguishability under noise \citep{jung}.
+
+We borrow the output form. In the FDI tradition a
+diagnostic system emits a decision; in the DX tradition a diagnosis is a
+\emph{set} of candidates consistent with the observations
+\citep{reiter,dekleer}, and the formal correspondence between the two is by now
+well understood \citep{cordier,tm_survey}. Our observation is that a system built
+on the FDI side of that correspondence, with a learned detector in place of an
+analytical model, produces sets whether or not it admits to it (the sets are the
+tied candidates), and that scoring it as though it emitted decisions measures the
+arbitrary rule that collapses them.
+
+When a group of modes is found non-isolable, the classical remedy is sensor
+placement: determine which additional measurement would make the group isolable,
+and at what cost \citep{krysander,frisk}. Our setting inherits the question and
+changes the search space. There is no analytical model of the cell, and the rows
+of our signature matrix are not residuals of an observer but declarations in an
+FMEA knowledge base: affected joints and manifesting signal families. The
+remedy we can afford is correspondingly different: not which sensor to add, but
+which dimension of the telemetry the deployed representation currently discards.
+The cost hierarchy of Section~\ref{sec:repair} plays the role sensor cost plays
+in the classical formulation.
+
+%==============================================================================
+\section{System and data}
+%==============================================================================
+
+\emph{Benchmark.} voraus-AD \citep{voraus} contains machine data from a six-axis
+robot on a pick-and-place task, with $12$ anomaly types physically induced. We
+use the $100$\,Hz release: $2122$ cycles, of which $755$ are anomalous and $1367$
+normal. The official training split is the $948$ normal runs recorded under
+\texttt{setting} $=72$; evaluation uses the disjoint \texttt{setting} $\neq 72$
+split ($419$ held-out normal cycles). The anomalous cycles
+fall under $72$ distinct \texttt{setting} values, each identifying one physical
+fault instantiation repeated for $4$--$20$ cycles, median $10$.
+
+\emph{Detector.} The benchmark's own baseline is a normalizing flow over robot
+telemetry \citep{voraus}, one instance of the density-estimation family surveyed
+by \citet{ruff}. We use a light CPU flow over $46$ measured channels, reaching
+AUROC $0.854$ and, with the threshold set at the $95$th percentile of a
+calibration half of the held-out normal cycles, TPR $0.601$ at FPR $0.071$ on
+the disjoint evaluation half; the $0.05$ the calibration fixes holds in sample
+only. This is below the $0.936$
+reported for the original model; the gap is architectural rather than
+informational, and detection accuracy is not this paper's claim. Every result
+below is conditioned on a cycle already flagged, and the detector supplies a
+verdict plus a per-signal standardised residual.
+
+\emph{Knowledge base and retrieval.} The knowledge base is a conventional FMEA
+encoded as a graph; recent work automates the construction of such graphs for
+robotic diagnosis \citep{aei_kg}, but ours is small and hand-authored, the
+realistic case for a single commissioned line. It declares $14$ failure modes, including the $12$ voraus-AD anomaly types, each with affected
+joints, manifesting signal families, a cycle-phase hint and a recommended check.
+Retrieval scores a mode $m$ against a cycle record $r$ as a weighted sum of
+Jaccard overlap of manifesting families gated by affected joints, an
+inverse-document-frequency-weighted signal evidence term, phase agreement and
+manifest coverage. Weights are fixed a priori; re-tuning them on a stratified
+$50/50$ fit half over five seeds converges to the same weights on $5/5$ seeds and
+gives held-out top-1 $0.158 \pm 0.004$ seed to seed, so what follows is not
+tuning on test.
+
+%==============================================================================
+\section{Structural indistinguishability}
+\label{sec:twins}
+%==============================================================================
+
+A mode's \emph{structural signature} is the pair (declared affected-joint scope,
+declared manifesting signal families). Two modes with the same signature are
+interchangeable under the deployed representation however the retrieval weights
+are set, because every term in the score is a function of that pair and of the
+record. Fig.~\ref{fig:signatures} shows the matrix.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig_signatures.pdf}
+\caption{Structural signatures of the $14$ failure modes. The four bracketed
+groups share a signature and are therefore non-isolable under this
+representation. Gearbox backlash declares the same two signal families as the
+gripping pair but a different joint scope, so it is not a twin --- the signature
+is the pair, not the families alone.}
+\label{fig:signatures}
+\end{figure}
+
+Nine of the fourteen modes fall into four groups: three load-torque modes (axis
+weight, lost payload, variable weight), two distal collisions (carton, foam), two
+gripping faults (invalid grip, mis-grip) and a commutation/over-temperature pair.
+This is a claim about the knowledge base, not about physics: two modes with the
+same signature may well differ in the raw telemetry, and the repair of
+Section~\ref{sec:repair} exploits that difference.
+
+In $514$ of $755$ anomalies ($68.1\%$) the rank-1 candidate lies in one of these
+groups, and every one of those is an exact score tie: $453$ of size two, $61$ of
+size three. None arises from score quantisation. We route each cycle by a
+cluster-margin test applied before a cluster-size test, the reject option of
+\citet{chow}: $122$ cycles ($16.2\%$)
+fall below the margin and are declared \emph{cluster-undetermined}, $134$
+($17.7\%$) have a rank-1 mode alone in its group and are \emph{decisive}, and
+$499$ ($66.1\%$) are \emph{human-resolvable}. Cluster accuracy by route is
+$0.180$, $0.187$ and $0.421$ in that order, reproducing the single-split cluster
+accuracy of $0.340$ exactly when weighted by route size;
+Table~\ref{tab:baselines} gives the corresponding five-split mean,
+$0.342 \pm 0.025$. The two are the same quantity over different populations, and
+we distinguish them wherever both appear. Note that the decisive route is no more
+accurate than the undetermined one: a rank-1 mode alone in its group is not
+thereby more often right.
+
+%==============================================================================
+\section{What the reported accuracy is not}
+\label{sec:baselines}
+%==============================================================================
+
+\subsection{The prevalence prior}
+
+The reference customarily reported for a ranked candidate list is uniform
+chance, $0.071$ over $14$ modes, against which the deployed retrieval shows a
+lift of $2.37\times$. Uniform chance is the wrong reference for a skewed
+benchmark, in which category~$1$ contributes $156$ cycles and category~$8$
+contributes $10$. The reference such a benchmark
+demands is a \emph{prevalence prior}: rank the modes by fit-half frequency and
+emit that ranking for every cycle. It reads no evidence and cannot distinguish
+one cycle from another.
+
+\begin{table}[t]
+\centering
+\caption{Deployed retrieval against two trivial baselines, over five
+leave-setting-out splits. The prior wins on all four ranking metrics (top-1,
+top-3, top-5 and MRR; two shown for space) and on cluster top-1, and loses only
+on balanced recall, the mean of the per-category recalls. A constant predictor
+is bounded there by $1/K$, with $K$ the number of categories in the test half: three categories have a single fault instantiation each, so under
+leave-setting-out they fall wholly on one side of the split and $K$ is $10$ or
+$11$, not $12$. That bound averages $0.095$ over the five splits, which is what
+the prior attains; a uniform predictor over the twelve categories scores
+$1/12 = 0.083$ for any $K$.}
+\label{tab:baselines}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+& top-1 & top-5 & cluster & balanced \\
+\midrule
+uniform chance       & $0.071$ & $0.357$ & $0.150$ & $0.083$ \\
+prevalence prior     & $\mathbf{0.187}$ & $\mathbf{0.705}$ & $\mathbf{0.401}$ & $0.095$ \\
+retrieval (deployed) & $0.169$ & $0.651$ & $0.342$ & $0.119$ \\
+\midrule
+two-stage (Sec.~\ref{sec:repair})  & $0.309$ & --- & $0.342$ & $0.213$ \\
+flat control (Sec.~\ref{sec:neg})  & $0.525$ & --- & --- & $0.397$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The prior beats the deployed retrieval on every ranking metric
+(Table~\ref{tab:baselines}) and also on cluster top-1, so retreating to the cluster level
+does not escape it. Against that reference the retrieval's lift is $0.91\times$.
+
+The one reading a prior cannot game is \emph{balanced recall}, and there the
+ordering is restored and monotone (Table~\ref{tab:baselines}), so the retrieval
+does carry per-cycle information. It carries very little: its recall is zero on
+seven of the twelve categories, and on the two largest it is worse than the
+constant ($0.238$ against $0.400$; $0.277$ against $0.600$). For that reason the
+comparisons between methods below rest on balanced recall;
+Section~\ref{sec:tiebreak} stays with top-1 because that is the number this
+literature reports.
+
+\subsection{The tie-break interval}
+\label{sec:tiebreak}
+
+% FIXME(P0) -- the sweep below runs on the full 755-cycle anomaly set with the
+% retrieval weights fixed a priori, whereas Table 1 reports five-split
+% leave-setting-out means.  Different populations, so the comparison with the
+% prior is one of scale rather than an exact one, and the text now says so.  The
+% correct fix is to re-run the 200-ordering sweep under leave-setting-out so that
+% Sec. 5, Table 1 and Fig. 1 all live on one protocol -- one script run.  Do it
+% before 31 October and restate this paragraph and Fig. 1's caption.
+Which member of a tied set is reported is not determined by the ranking. In our
+implementation it is determined by the order the modes happen to be declared in
+the knowledge base. Varying only that order, on the full anomaly set with the
+retrieval weights fixed a priori (Fig.~\ref{fig:teaser}, left): the deployed
+declaration order gives $0.163$, alphabetical $0.199$, reverse declaration
+$0.144$, and $200$ random orderings give $0.156 \pm 0.028$, range
+$[0.117, 0.199]$. An oracle that always picks the correct member of the tied set
+reaches $0.280$, which bounds what any tie-breaking rule could achieve.
+
+The interval is $0.082$ wide. The same quantity varies by $\pm 0.018$ across
+leave-setting-out splits (Section~\ref{sec:repair}), so the arbitrary rule
+contributes more than twice the spread the validation protocol does, and the
+third decimal of a reported top-1 on this benchmark is not a property of the
+method. Both spreads, $0.036$ across splits and $0.082$ across orderings, exceed
+the $0.018$ by which the deployed retrieval trails the prevalence prior in
+Table~\ref{tab:baselines}: an arbitrary list order moves the number further than
+the margin these comparisons turn on.
+
+This is the paper's thesis in numerical form. It has a positive counterpart:
+the \emph{cluster} assignment is tie-break
+invariant, at $0.340$ under all three orderings, because the ties lie inside
+groups and never across them. What the representation determines is the group,
+not the point answer.
+
+%==============================================================================
+\section{Sensor placement over representation dimensions}
+\label{sec:repair}
+%==============================================================================
+
+For each non-isolable group we ask which named quantity, if the representation
+carried it, would separate the members.
+
+\emph{Grammar.} Candidate dimensions carry physical names:
+sign of deviation, within-cycle step, a carry-versus-empty payload contrast,
+dispersion, and channels in the data but never read by the attribution. Each
+carries a cost class: \emph{free} if already in the evidence record,
+\emph{pipeline} if in the data but unread, \emph{hardware} if not measured in the
+cell at all. The last is where the classical answer returns: buy a sensor.
+
+\emph{Certificate.} A repair is not applied but issued as a certificate stating
+the dimensions added, their cost class, within-group accuracy on unseen fault
+instantiations, and the three controls of Table~\ref{tab:cert}. It stays
+inactive until an engineer authorises it, and is credible only if the repaired
+figure exceeds all three.
+
+\begin{table*}[t]
+\centering
+\caption{Repair certificates. ``Grouped'' is leave-setting-out validation and is
+the figure we report; ``Ungrouped'' is the identical pipeline under a random
+split over cycles. ``Deployed'' is the current representation on the same
+held-out half and ``Permuted'' the same search with shuffled labels, both
+grouped. Only the load-torque group clears all three controls, and for the
+collision group the choice of protocol changes the verdict itself, not just the
+number. $^{\dag}$Collision figures come from the pre-registered
+free-cost dimension set: its instantiation count is too low for the grouped inner
+search to run, so this row is not the same procedure as the one above it.}
+\label{tab:cert}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccp{34mm}}
+\toprule
+Group & Ungrouped & Grouped & Deployed & Majority & Permuted & Verdict \\
+\midrule
+load torque (3 modes)      & $0.933$ & $0.840$ & $0.562$ & $0.504$ & $0.431$ &
+  \textbf{adopted}, both protocols, $5/5$ splits \\
+distal collision (2 modes)$^{\dag}$ & $0.830$ & $0.776$ & $0.709$ & $0.718$ & $0.608$ &
+  \textbf{inconclusive} grouped; adopted ungrouped \\
+gripping (2 modes)         & \multicolumn{5}{c}{one instantiation per member} &
+  undetermined \\
+commutation/temp (2 modes) & \multicolumn{5}{c}{no temperature channel exists} &
+  hardware gap \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Table~\ref{tab:cert} gives the four verdicts, and we distinguish the three
+non-positive ones because they are not the same claim.
+\textbf{Adopted}: the load-torque group is separated at $0.840$ on held-out
+instantiations against $0.562$ for the deployed representation, a $0.504$
+majority floor and $0.431$ under permuted labels, on all five splits, using
+signed deviation and within-cycle step, both free.
+\textbf{Inconclusive}: distal collision has too few fault instantiations for the
+grouped inner search to run, so its $0.776$ comes from the pre-registered
+free-cost dimension set rather than from a search. It exceeds the $0.718$
+majority rate by less than its own sampling error: with $n_\text{test} = 57$ the
+binomial $95\%$ half-width is $\approx 0.108$.
+\textbf{Undetermined}: gripping has one instantiation per member, so no grouped
+split exists to evaluate anything on. The distinction from the row above is
+between a grouped \emph{split} and a grouped \emph{search}; collision admits a
+split, so a pre-registered dimension set can at least be evaluated on it.
+This is a statement about the evidence, not the world, and
+Section~\ref{sec:neg} measures how many instantiations would be needed. \textbf{Hardware gap}: no temperature channel
+exists in the cell, so no dimension of the grammar could separate commutation
+faults from drive over-temperature. Of the four verdicts this is the only claim
+about the plant itself, and it is the classical sensor-placement answer.
+
+End to end, the two-stage system moves point top-1 from $0.169 \pm 0.018$ to
+$0.302 \pm 0.047$ against a stage-1 cluster ceiling of $0.342 \pm 0.025$, and
+balanced recall from $0.119$ to $0.213$; the fixed shipping configuration
+reported in Table~\ref{tab:baselines} reaches $0.309 \pm 0.031$ and $0.869$
+within the load-torque group. Both are the same metric on the same held-out halves
+($n_\text{test} = 152$): the searched certificate re-selects dimensions per split
+and pays the generalisation cost of that selection, the fixed configuration
+none. We headline the certificate because it must include
+the cost of finding the repair. Intervals are $t_{0.975,4} = 2.776$
+standard errors of the split mean; a normal approximation would understate them
+by about $30\%$.
+
+%==============================================================================
+\section{The validation protocol decides deployment}
+\label{sec:protocol}
+%==============================================================================
+
+Each \texttt{setting} value is one physical instantiation of a fault, so a random
+split over cycles places the same instantiation on both sides and a model can
+recognise the session rather than the fault. We hold out whole \texttt{setting}
+values and require that a certificate's evidence come from instantiations the
+search never saw. The two protocols separate the arms as their label dependence
+predicts: the flat control falls from $0.800$ to $0.525$, while retrieval
+improves slightly ($0.162$ to $0.169$) because it reads no labels and cannot
+benefit from leakage.
+
+Table~\ref{tab:cert}'s first two columns carry the result that matters. The
+load-torque certificate survives the change of protocol. The distal-collision
+group does not: under a random split it is
+certified at $0.830$ and adopted, and under leave-setting-out it reads $0.776$
+and is rejected. Nothing in the ungrouped run looks wrong: the permuted-label control
+passes, the margin over the deployed representation is comfortable, and the
+verdict is stable across seeds. What separates a recommendation to change what a
+plant measures from a session-recognition artefact is the protocol, not the
+method. We therefore state it as a requirement: any learned comparison on this
+benchmark should group by \texttt{setting}.
+
+%==============================================================================
+\section{Controls, and what would settle the open verdicts}
+\label{sec:neg}
+
+\subsection{The flat classifier}
+%==============================================================================
+
+A flat $12$-way classifier over all grammar features reaches $0.525$ under the same grouped protocol, well above
+our $0.309$, and $0.397$ balanced recall against our $0.213$. We tested the
+label-efficiency defence one would reach for and it did not survive: with both
+systems given the same labels and scored end to end on the same twelve-way task,
+the control leads from $k=8$ labels upward and the gap
+widens ($0.226$ against $0.196$ at $k=8$; $0.526$ against $0.309$ at $k=320$).
+Below $k=8$ neither arm separates from the other, or from a rule that predicts
+the majority category of its own $k$ labels, so the small-budget region is not a
+regime either method wins. The full curve is in the repository.
+
+Wherever labels can be collected, a flat classifier over the same
+features is the stronger choice for point accuracy; the commissioning regime we
+had hoped to claim for ourselves is one in which no method here is measurably
+better than any other.
+
+\subsection{Where the ranking's output goes}
+
+The load-torque group is the true answer on $41.1\%$ of cycles but is ranked
+first on $66.0\%$, an over-prediction that consumes most of the ranking's output.
+The distal-collision and gripping groups are the true answer on $12.5\%$ and
+$3.0\%$ and are ranked first on \emph{none}, so their certificates are computed
+over cycles selected by true label and state whether a repair would hold if the
+group were reached. They do not describe deployed behaviour. This sharpens the control
+result: the flat classifier recovers foam collision at $0.506$, a category on
+which the retrieval and the prior both score zero. The evidence is in the
+same envelope the grammar features are computed from; the attribution and
+retrieval layer never reaches it.
+
+\subsection{How many instantiations would settle it?}
+
+An \emph{inconclusive} verdict is a confession unless one can say what would
+resolve it. On real data the instantiation count is fixed at whatever the
+benchmark supplies, so we make it a knob and sweep it on injected faults.
+
+No URDF of the cell exists, so payload torque is measured: carry-phase samples
+are matched to their nearest empty-phase neighbours in six-joint space and
+differenced, and the calibration is in the repository. Because
+the fault is injected along a dimension of the same grammar the search examines,
+\emph{nothing here may be used to claim that repair works}. We declare that
+circularity at the source and claim only a property of the protocol.
+
+On the gripping pair, $N \le 3$ instantiations leave the grouped inner search
+unable to run; at $N = 4$--$6$ it runs but the verdict flips between draws; from
+$N \ge 8$ it is stable. Note, though, what it stabilises \emph{on}: reject. The
+deployed representation already separates the injected pair at $\approx 0.99$, so
+whether the same threshold governs an \emph{adopt} verdict is untested. The collision pair reaches
+the run threshold at the same $N \ge 4$ but is still flipping at $N = 16$.
+voraus-AD supplies $N = 1$ per gripping mode and $N = 3$ for carton collision,
+both below the $N \ge 4$ the search needs. \emph{The undetermined and
+inconclusive verdicts of Section~\ref{sec:repair} were therefore forced by the
+data, not chosen by the method.} We read these counts as lower bounds, on the grounds that injected faults separate more cleanly than real
+ones; that is an argument, not a measurement, since it assumes stabilisation is
+monotone in separability.
+
+\subsection{Discriminative structure is joint-resolved}
+
+Holding the statistic fixed
+and varying only its resolution within the load-torque group, a mode-level scalar
+reaches $0.455$, below the $0.504$ majority rate; per signal family $0.527$;
+joint-resolved over the load joints $0.719$; joint-resolved over all six joints
+$0.860$. FMEA prose cannot express the quantity that decides the group.
+
+%==============================================================================
+\section{Conclusion}
+%==============================================================================
+
+The residue a ranked candidate list leaves on this benchmark is structural, not
+statistical: the knowledge base's fault signature matrix has repeated columns,
+and $68.1\%$ of anomalies tie at rank one as a result. Reporting a point answer
+under those conditions reports a tie-break rule. We measured how much: an
+arbitrary list order moves the reported top-1 across an interval several times
+wider than the margins these comparisons turn on, while the group assignment does
+not move at all.
+
+What follows is a change of output form. Report the
+non-isolable group; ask which discarded dimension would separate it; issue the
+answer as a certificate carrying held-out evidence, controls and a cost class,
+inactive until authorised. One of four groups clears that bar on real data. The
+same analysis bounds the gain: cluster accuracy is $0.340$, so resolving every
+tie perfectly would not carry end-to-end accuracy past it, and the errors are not
+confined to the groups that generate the ties.
+
+The result we would most want carried forward is the protocol one. Under an
+ungrouped split the same pipeline certifies a collision repair that grouped
+validation rejects, and permuted-label controls do not catch it. Any diagnostic
+method that proposes to change what a plant measures should be held to evidence
+from fault instantiations it has never seen.
+
+For a safety function built on a learned component, the property to establish
+first is not the accuracy of the candidate list but whether the list is decidable
+at all, and that, as the structural tradition holds, can be checked before any
+data is seen.
+
+% Final manuscripts are limited to SIX pages under the post-2022 IFAC policy,
+% with no over-length allowance.  This file is built to that limit, not to the
+% eight pages the review stage permits.
+% The DOI below should be the Zenodo CONCEPT doi (resolves to the latest
+% version), not a version-specific one, so the citation does not go stale when
+% the deposit is updated.  Check on the Zenodo record page under "Cite all
+% versions" before submitting.
+
+\emph{Code and data.} Evidence records, certificates, the tie-break sweep and
+the producing scripts are archived at
+\mbox{\url{https://doi.org/10.5281/zenodo.22089173}}.
+
+%==============================================================================
+\begin{thebibliography}{99}
+\small
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+\linespread{0.96}\selectfont
+
+% ---------------------------------------------------------------------------
+% 17 entries.  Every one is cited in the text -- no padding.  All bibliographic
+% details (volume, issue, pages, DOI) were checked against the publisher record
+% or the authors' own publication lists.  Do not add an entry you have not
+% opened yourself.
+% ---------------------------------------------------------------------------
+
+\bibitem[Blanke et al.(2016)]{blanke}
+Blanke, M., Kinnaert, M., Lunze, J., and Staroswiecki, M. (2016).
+\emph{Diagnosis and Fault-Tolerant Control}, 3rd ed. Springer, Berlin.
+
+\bibitem[Brockmann et al.(2024)]{voraus}
+Brockmann, J.T., Rudolph, M., Rosenhahn, B., and Wandt, B. (2024).
+The voraus-AD dataset for anomaly detection in robot applications.
+\emph{IEEE Transactions on Robotics}, 40, 438--451.
+
+\bibitem[Chow(1970)]{chow}
+Chow, C.K. (1970).
+On optimum recognition error and reject tradeoff.
+\emph{IEEE Transactions on Information Theory}, 16(1), 41--46.
+
+\bibitem[Cordier et al.(2004)]{cordier}
+Cordier, M.-O., Dague, P., L\'{e}vy, F., Montmain, J., Staroswiecki, M., and
+Trav\'{e}-Massuy\`{e}s, L. (2004).
+Conflicts versus analytical redundancy relations: a comparative analysis of the
+model based diagnosis approach from the artificial intelligence and automatic
+control perspectives.
+\emph{IEEE Transactions on Systems, Man, and Cybernetics --- Part B}, 34(5),
+2163--2177.
+
+\bibitem[de Kleer and Williams(1987)]{dekleer}
+de Kleer, J. and Williams, B.C. (1987).
+Diagnosing multiple faults.
+\emph{Artificial Intelligence}, 32(1), 97--130.
+
+\bibitem[D\"{u}steg\"{o}r et al.(2006)]{damadics}
+D\"{u}steg\"{o}r, D., Frisk, E., Cocquempot, V., Krysander, M., and
+Staroswiecki, M. (2006).
+Structural analysis of fault isolability in the DAMADICS benchmark.
+\emph{Control Engineering Practice}, 14(6), 597--608.
+
+\bibitem[Frisk et al.(2009)]{frisk}
+Frisk, E., Krysander, M., and \r{A}slund, J. (2009).
+Sensor placement for fault isolation in linear differential-algebraic systems.
+\emph{Automatica}, 45(2), 364--371.
+
+\bibitem[Jung et al.(2015)]{jung}
+Jung, D., Frisk, E., and Krysander, M. (2015).
+Quantitative isolability analysis of different fault modes.
+\emph{IFAC-PapersOnLine}, 48(21), 1275--1282.
+
+\bibitem[Kapoor and Narayanan(2023)]{kapoor}
+Kapoor, S. and Narayanan, A. (2023).
+Leakage and the reproducibility crisis in machine-learning-based science.
+\emph{Patterns}, 4(9), 100804.
+
+\bibitem[Krysander and Frisk(2008)]{krysander}
+Krysander, M. and Frisk, E. (2008).
+Sensor placement for fault diagnosis.
+\emph{IEEE Transactions on Systems, Man, and Cybernetics --- Part A}, 38(6),
+1398--1410.
+
+\bibitem[Krysander et al.(2008)]{krysander_mso}
+Krysander, M., \r{A}slund, J., and Nyberg, M. (2008).
+An efficient algorithm for finding minimal overconstrained subsystems for
+model-based diagnosis.
+\emph{IEEE Transactions on Systems, Man, and Cybernetics --- Part A}, 38(1),
+197--206.
+
+\bibitem[Liao et al.(2025)]{aei_kg}
+Liao, X., Chen, C., Wang, Z., Liu, Y., Wang, T., and Cheng, L. (2025).
+Large language model assisted fine-grained knowledge graph construction for
+robotic fault diagnosis.
+\emph{Advanced Engineering Informatics}, 65, 103134.
+
+\bibitem[Reiter(1987)]{reiter}
+Reiter, R. (1987).
+A theory of diagnosis from first principles.
+\emph{Artificial Intelligence}, 32(1), 57--95.
+
+\bibitem[Ruff et al.(2021)]{ruff}
+Ruff, L., Kauffmann, J.R., Vandermeulen, R.A., Montavon, G., Samek, W.,
+Kloft, M., Dietterich, T.G., and M\"{u}ller, K.-R. (2021).
+A unifying review of deep and shallow anomaly detection.
+\emph{Proceedings of the IEEE}, 109(5), 756--795.
+
+\bibitem[Trav\'{e}-Massuy\`{e}s(2014)]{tm_survey}
+Trav\'{e}-Massuy\`{e}s, L. (2014).
+Bridging control and artificial intelligence theories for diagnosis: a survey.
+\emph{Engineering Applications of Artificial Intelligence}, 27, 1--16.
+
+\bibitem[Trav\'{e}-Massuy\`{e}s and Wotawa(2024)]{tm_wotawa}
+Trav\'{e}-Massuy\`{e}s, L. and Wotawa, F. (2024).
+Bridging hardware and software diagnosis: leveraging fault signature matrix and
+spectrum-based fault localization similarities.
+In \emph{35th International Conference on Principles of Diagnosis and Resilient
+Systems (DX 2024)}, OASIcs vol. 125, 5:1--5:15.
+
+\bibitem[Wu and Keogh(2023)]{wukeogh}
+Wu, R. and Keogh, E.J. (2023).
+Current time series anomaly detection benchmarks are flawed and are creating the
+illusion of progress. \emph{IEEE Transactions on Knowledge and Data Engineering}, 35(3),
+2421--2429.
+
+\end{thebibliography}
+
+\end{document}
