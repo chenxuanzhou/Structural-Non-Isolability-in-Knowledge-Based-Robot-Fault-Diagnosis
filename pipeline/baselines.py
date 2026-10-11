@@ -19,9 +19,10 @@ the retrieval scores 0.90x.
 
 Two further references belong beside it:
 
-  BALANCED (MACRO) RECALL -- mean per-category recall.  A constant predictor
-      scores 1/n_classes here however skewed the data, so this is the metric the
-      prior cannot game.  It is where the retrieval, and much more clearly the
+  BALANCED (MACRO) RECALL -- mean per-category recall over the categories in
+      the test half.  A constant predictor scores 1/K here however skewed the
+      data (K = 10 or 11 under leave-setting-out, since three categories have a
+      single instantiation), so this is the metric the prior cannot game.  It is where the retrieval, and much more clearly the
       repair, still show a real effect.
 
   THE TIE-BREAK INTERVAL -- 514 of 755 cycles have an exact rank-1 score tie, so
@@ -186,10 +187,12 @@ def balanced_recall(ctx, quick=False, verbose=True):
     testable, _ = R.testable_clusters()
     mi, ma = defaultdict(list), defaultdict(list)
     per_cat = defaultdict(lambda: defaultdict(list))
+    const_bound = []          # 1/K, K = categories present in the test half
 
     for seed in SEEDS:
         fit, test = R._grouped_split(ctx["ids"], ctx["cat_of"], ctx["set_of"], seed)
         y = [ctx["cat_of"][i] for i in test]
+        const_bound.append(1.0 / len(set(y)))
         maj = Counter(ctx["cat_of"][i] for i in fit).most_common(1)[0][0]
         arms = {"prior (constant)": [maj] * len(test),
                 "retrieval": [ctx["cat_of_fm"][_tied(ctx, i)[0]] for i in test]}
@@ -231,9 +234,12 @@ def balanced_recall(ctx, quick=False, verbose=True):
                                  for c, v in sorted(per_cat[n].items())})
            for n in mi}
     out["uniform_macro"] = 1.0 / len(per_cat["retrieval"])
+    out["constant_macro_bound"] = float(np.mean(const_bound))
     if verbose:
         print("\n2. BALANCED RECALL - mean per-category recall; a constant scores "
-              f"{out['uniform_macro']:.3f} here whatever the skew")
+              f"1/K per split whatever the skew (K = categories in the test half; "
+              f"mean {out['constant_macro_bound']:.3f}), uniform over 12 scores "
+              f"{out['uniform_macro']:.3f}")
         print("                          micro top-1    macro recall")
         for n in ("prior (constant)", "retrieval", "two-stage", "flat control"):
             if n in out:
@@ -305,6 +311,96 @@ def tiebreak_interval(ctx, draws=200, verbose=True):
     return out
 
 
+def tiebreak_interval_grouped(ctx, draws=200, verbose=True):
+    """The tie-break interval on the protocol of Table 1.
+
+    `tiebreak_interval` above sweeps the full 755-cycle set, whereas the prior
+    and the retrieval are compared as five-split leave-setting-out means.  Here
+    every ordering is applied to the held-out half of the SAME five splits and
+    averaged, so the interval, the prior and the split-to-split CI are one
+    quantity on one population.  An ordering is a property of the knowledge
+    base, so draw d is the same permutation on every split.
+    """
+    cat_of, cat_of_fm, fm_order = ctx["cat_of"], ctx["cat_of_fm"], ctx["fm_order"]
+    tsets = {i: _tied(ctx, i) for i in ctx["ids"]}
+    named = {"declaration": lambda f: fm_order.index(f),
+             "alphabetical": lambda f: f,
+             "reverse": lambda f: -fm_order.index(f)}
+    keys = dict(named)
+    for d in range(draws):
+        rng = np.random.RandomState(d)
+        perm = {f: rng.rand() for f in fm_order}
+        keys[f"random_{d}"] = (lambda p: lambda f: p[f])(perm)
+
+    top1, clus = defaultdict(list), defaultdict(list)
+    oracle, prior, n_test = [], [], []
+    for seed in SEEDS:
+        fit, test = R._grouped_split(ctx["ids"], cat_of, ctx["set_of"], seed)
+        n_test.append(len(test))
+        for name, key in keys.items():
+            picks = [min(tsets[i], key=key) for i in test]
+            top1[name].append(float(np.mean([cat_of_fm[f] == cat_of[i]
+                                             for f, i in zip(picks, test)])))
+            clus[name].append(float(np.mean([ctx["rep"][f] == ctx["true_cluster"][i]
+                                             for f, i in zip(picks, test)])))
+        oracle.append(float(np.mean([cat_of[i] in [cat_of_fm[f] for f in tsets[i]]
+                                     for i in test])))
+        maj = Counter(cat_of[i] for i in fit).most_common(1)[0][0]
+        prior.append(float(np.mean([cat_of[i] == maj for i in test])))
+
+    def ci95(v):
+        return 2.776 * float(np.std(v, ddof=1)) / np.sqrt(len(v))
+
+    rand = [float(np.mean(top1[f"random_{d}"])) for d in range(draws)]
+    every = [float(np.mean(v)) for v in top1.values()]
+    within = [max(top1[n][s] for n in keys) - min(top1[n][s] for n in keys)
+              for s in range(len(SEEDS))]
+    decl = top1["declaration"]
+    prior_mean = float(np.mean(prior))
+    out = {
+        "protocol": "leave-setting-out, five splits, held-out half; same splits as Table 1",
+        "seeds": list(SEEDS), "n_test": n_test, "draws": draws,
+        "declaration_order": float(np.mean(decl)),
+        "alphabetical": float(np.mean(top1["alphabetical"])),
+        "reverse_declaration": float(np.mean(top1["reverse"])),
+        "random_mean": float(np.mean(rand)), "random_sd": float(np.std(rand)),
+        "random_min": float(min(rand)), "random_max": float(max(rand)),
+        "all_orderings_min": float(min(every)), "all_orderings_max": float(max(every)),
+        "interval_width": float(max(every) - min(every)),
+        "oracle_ceiling": float(np.mean(oracle)),
+        "declaration_per_split": decl,
+        "declaration_ci95": ci95(decl),
+        "declaration_split_range": float(max(decl) - min(decl)),
+        "within_split_width": within,
+        "within_split_width_mean": float(np.mean(within)),
+        "prior_top1": prior_mean,
+        "frac_orderings_at_or_above_prior": float(np.mean([v >= prior_mean for v in every])),
+        "cluster_by_tiebreak": {n: float(np.mean(clus[n])) for n in named},
+        "cluster_invariant": all(len(set(round(clus[n][s], 9) for n in keys)) == 1
+                                 for s in range(len(SEEDS))),
+        "cluster_invariant_over": f"{len(keys)} orderings x {len(SEEDS)} splits",
+    }
+    if verbose:
+        print("\n3b. THE TIE-BREAK INTERVAL ON TABLE 1's PROTOCOL "
+              f"(leave-setting-out, {len(SEEDS)} splits, five-split means)")
+        print(f"   declaration order (reported)   {out['declaration_order']:.4f}"
+              f"   +/- {out['declaration_ci95']:.4f} (t 95% over splits)")
+        print(f"   alphabetical by mode id        {out['alphabetical']:.4f}")
+        print(f"   reverse declaration            {out['reverse_declaration']:.4f}")
+        print(f"   random, {draws} draws             {out['random_mean']:.4f} +/- "
+              f"{out['random_sd']:.4f}   [{out['random_min']:.3f}, {out['random_max']:.3f}]")
+        print(f"   every ordering tried           [{out['all_orderings_min']:.3f}, "
+              f"{out['all_orderings_max']:.3f}]  width {out['interval_width']:.3f}")
+        print(f"   oracle tie-break (ceiling)     {out['oracle_ceiling']:.4f}")
+        print(f"   prevalence prior               {prior_mean:.4f}   "
+              f"({100 * out['frac_orderings_at_or_above_prior']:.1f}% of orderings reach it)")
+        print(f"   within-split width, per split  {[round(w, 3) for w in within]}")
+        print(f"   cluster assignment invariant over {out['cluster_invariant_over']}: "
+              f"{out['cluster_invariant']}  "
+              f"{ {k: round(v, 4) for k, v in out['cluster_by_tiebreak'].items()} }")
+    return out
+
+
 # ---------------------------------------------------------------------------
 def main(argv):
     quick = "--quick" in argv
@@ -315,7 +411,8 @@ def main(argv):
         "prior_vs_retrieval": prior_vs_retrieval(ctx),
         "balanced_recall": balanced_recall(ctx, quick=quick),
         "tiebreak": tiebreak_interval(ctx),
-        "note": ("Trivial baselines the published evaluation omitted. The "
+        "tiebreak_grouped": tiebreak_interval_grouped(ctx),
+        "note":("Trivial baselines the published evaluation omitted. The "
                  "prevalence prior beats the retrieval on every ranking metric; "
                  "balanced recall is where the retrieval and the repair still show "
                  "an effect; the tie-break interval bounds what a single top-1 "

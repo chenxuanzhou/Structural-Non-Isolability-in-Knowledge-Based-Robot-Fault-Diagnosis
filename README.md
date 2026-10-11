@@ -3,6 +3,11 @@
 Code and derived data for a study of what a knowledge-graph fault-diagnosis
 pipeline **cannot** decide, and what changing its representation would fix.
 
+The paper, *Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis:
+Tie-Break Intervals and Grouped Validation* (SAFEPROCESS 2027 manuscript), is
+`safeprocess2027_final.tex` / `safeprocess2027_final.pdf`. Everything else in
+this repository is the experimental record behind it.
+
 Built on [voraus-AD](https://github.com/vorausrobotik/voraus-ad-dataset), a
 six-joint collaborative robot performing pick-and-place, with 12 injected
 anomaly types over 755 anomalous cycles.
@@ -19,9 +24,13 @@ the subject of the code here.
 (68.1%) two or more failure modes carry identical affected joints and identical
 manifesting signal families, so the retrieval score assigns them the same value
 for every cycle. Which one is reported is decided by tie-breaking, not evidence.
-Re-ordering the failure modes in the knowledge base moves top-1 across
-`[0.117, 0.199]` — an interval that contains the trivial baseline below. Cluster
-assignment, by contrast, is invariant at `0.3404` under every ordering tried.
+On the five leave-setting-out splits used for every comparison below,
+re-ordering the failure modes in the knowledge base moves the five-split mean
+top-1 across `[0.1186, 0.2003]` — `0.082` wide, more than twice the split-to-split
+95% interval (`±0.018`), and containing the trivial baseline below (`0.187`).
+Cluster assignment, by contrast, is invariant at `0.342` under all 203 orderings
+on every split. (Swept over all 755 cycles instead of the held-out halves, the
+same interval is `[0.117, 0.199]` and the invariant cluster accuracy `0.340`.)
 
 **2. A constant beats the ranking.** A *prevalence prior* — rank the failure
 modes by how often they occurred in the fit half, emit that same ranking for
@@ -42,9 +51,11 @@ Against that, the part that holds: identifying which modes are mutually
 non-isolable, searching a grammar of discarded physical dimensions for one that
 separates them, and issuing the result as a **repair certificate** carrying
 held-out accuracy, three controls and a cost class. On the load-torque cluster
-this reaches `0.840` held-out three-way accuracy against `0.562` for the deployed
-representation, and lifts balanced recall from `0.095` (prior) through `0.119`
-(retrieval) to `0.213` — the only stage that clears both trivial references.
+the searched certificate reaches `0.840` held-out three-way accuracy against
+`0.562` for the deployed representation. Its fixed shipping configuration lifts
+balanced recall from `0.095` (prior) through `0.119` (retrieval) to `0.213`, and
+is the only stage that beats the prevalence prior on both top-1 (`0.309` against
+`0.187`) and balanced recall.
 
 ---
 
@@ -75,15 +86,17 @@ cd pipeline && python baselines.py
 ```
 
 That reproduces the prevalence prior, the balanced-recall comparison and the
-tie-break interval, and writes `results/baselines.json`.
+tie-break interval — both the leave-setting-out sweep the paper reports and the
+full-set sweep — and writes `results/baselines.json`.
 
 ```bash
 cd pipeline && python distinguishability.py
 ```
 
 Structural twin clusters, route assignment, cluster accuracy and the
-margin-based abstention. Add `--probe` for the separability test that shows the
-clusters are a property of the representation rather than of the robot.
+margin-based abstention. Add `--probe` (needs the parquet) for the separability
+test that shows the clusters are a property of the representation rather than of
+the robot.
 
 ```bash
 cd pipeline && python repair.py --control --labels --sensitivity
@@ -99,8 +112,12 @@ cd pipeline && python held_out_eval.py
 
 Held-out validation of the retrieval weights over five stratified splits.
 
-The only result that needs the full dataset is the detector's own AUROC / AU-PR,
-because it is trained on raw telemetry (`mvtflow/`).
+The results that need the full dataset are the detector's own AUROC, AU-PR and
+operating point (TPR / FPR), because the detector is trained on raw telemetry
+(`mvtflow/`); the semi-synthetic instantiation sweep (`synth_power.py`), which
+injects faults into raw normal cycles; the full-chain run over all 755
+anomalies (`integration_test.py`), which rebuilds the evidence records from raw
+telemetry; and the separability probe (`distinguishability.py --probe`).
 
 ---
 
@@ -127,27 +144,52 @@ written by hand.
 
 | Result | Script | Output |
 |---|---|---|
-| Prevalence prior, balanced recall, tie-break interval | `pipeline/baselines.py` | `results/baselines.json` |
+| Prevalence prior, balanced recall | `pipeline/baselines.py` | `results/baselines.json` |
+| Tie-break interval on the leave-setting-out splits (paper Sec. 5.2, Fig. 1) | `pipeline/baselines.py` | `results/baselines.json` → `tiebreak_grouped` |
+| Tie-break interval on the full 755-cycle set | `pipeline/baselines.py` | `results/baselines.json` → `tiebreak` |
 | Twin clusters, routes, cluster accuracy, abstention | `pipeline/distinguishability.py` | `results/distinguishability_results.json` |
 | Repair certificates, protocol comparison, two-stage, flat control, granularity ablation, sensitivity | `pipeline/repair.py` | `results/repair_results.json` |
 | Label-budget curve and its 20-split robustness check | `pipeline/repair.py` (`label_curve_vs_control`) | `results/label_budget_curve.json` |
 | Held-out retrieval weights | `pipeline/held_out_eval.py` | `results/held_out_seeds.json` |
-| Instantiation-count sweep, gripping pair | `pipeline/synth_power.py` | `results/synth_instantiation_power.json` |
+| Instantiation-count sweep, gripping pair (needs the parquet) | `pipeline/synth_power.py` | `results/synth_instantiation_power.json` |
 | Instantiation-count sweep, collision pair | `pipeline/sim_experiments.py --c` | `results/sim_collision_power.json` |
-| Full-chain retrieval over all 755 anomalies | `pipeline/integration_test.py` | `results/integration_results.csv` |
-| Detector-gradient cross-check (a negative result) | `pipeline/eval_retrieve.py` | `results/gradient_crosscheck.json` |
+| Full-chain retrieval over all 755 anomalies (needs the parquet) | `pipeline/integration_test.py` | `results/integration_results.csv` |
+| Detector-gradient cross-check (a negative result) | `pipeline/eval_retrieve.py --gradient` (reads the interface's per-cycle cache `shared/cache/dataset_all.json`, which is not shipped) | `results/gradient_crosscheck.json` |
+| Detector AUROC, AU-PR, TPR / FPR (needs the parquet) | `mvtflow/train.py` | `results/detector_metrics.json` (written on training; not shipped) |
 
 Figures are rebuilt from those JSON files:
 
 ```bash
-python make_figures.py
+python make_figures.py                            # every figure
+python make_figures.py fig_teaser fig_signatures  # only the two the paper uses
 ```
+
+The six-page paper has room for two figures, so it uses the most important ones
+and merges where it can:
+
+| Paper | File | Contents |
+|---|---|---|
+| Fig. 1 | `figures/fig_teaser.pdf` | tie-break interval and balanced recall, merged into one figure |
+| Fig. 2 | `figures/fig_signatures.pdf` | structural signatures of the 14 failure modes |
+
+The other figures in `figures/` (protocol, certificates, instantiation power,
+granularity, label budget) belong to the long version. Their numbers are in the
+paper's tables and text.
+
+To build the paper, put IFAC's official `ifacconf.cls` (from the
+[IFAC author guide](https://www.ifac-control.org/conferences/author-guide)) next
+to `safeprocess2027_final.tex` and run `pdflatex` twice. Without it,
+`tools/ifacconf_local.cls` can stand in: copy it next to the `.tex` as
+`ifacconf.cls`. It is a local approximation for compiling and page-counting
+only, not for submission. The committed PDF was built with it: six pages.
 
 ---
 
 ## Layout
 
 ```
+safeprocess2027_final.tex / .pdf   the paper
+make_figures.py    rebuilds figures/ from results/
 pipeline/          the diagnosis pipeline and every evaluation script
   line_kg.py         FMEA knowledge graph, 14 failure modes, retrieval scoring
   attribution_bridge.py  numeric anomaly -> structured evidence record
@@ -160,6 +202,8 @@ mvtflow/           normalizing-flow detector (needs the parquet to train)
 data/              derived evidence records; see Data above
 results/           every reported number, as JSON
 figures/           vector PDFs, rebuilt by make_figures.py
+voraus-AD_data_source_and_licence_record.pdf   provenance and licence record for the dataset
+tools/             ifacconf_local.cls, a stand-in for IFAC's class (see the build note above)
 ```
 
 Not every file in `pipeline/` is used by the analysis above. `kb_console.py`,
@@ -203,12 +247,38 @@ cross-validation of the greedy search is grouped as well.
 
 Code is released under the MIT License (`LICENSE`).
 
-Derived data in `data/` and `results/` is released under CC BY 4.0. It is derived
-from voraus-AD, which carries its own license — check the
-[dataset repository](https://github.com/vorausrobotik/voraus-ad-dataset) and
-comply with both.
+Derived data in `data/`, `results/` and `pipeline/repair_adopted.json` (a
+classifier fitted on voraus-AD cycles), and the figures in `figures/` drawn from
+`results/` (all but `fig_signatures`), are an adaptation of the voraus-AD dataset
+(Brockmann, Rudolph, Rosenhahn and Wandt, *The voraus-AD dataset for anomaly
+detection in robot applications*, IEEE Transactions on Robotics; rights holder
+voraus robotik GmbH), which is licensed under
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Its
+ShareAlike and NonCommercial terms carry over, so this material is released
+under CC BY-NC-SA 4.0 too: non-commercial use only, with attribution, and
+adaptations under the same licence. It contains per-cycle values and labels
+computed from `voraus-ad-dataset-100hz.parquet`; the dataset itself is not
+redistributed here (see the
+[dataset repository](https://github.com/vorausrobotik/voraus-ad-dataset)).
+`voraus-AD_data_source_and_licence_record.pdf` records the source and licence.
 
 ## Citation
 
-A manuscript describing this work is in preparation; citation details will be
-added here on acceptance. Until then, please cite this repository.
+The paper is a SAFEPROCESS 2027 manuscript; full citation details will be added
+here on acceptance. Until then, please cite the paper's title and the archived
+code and data:
+
+> Zhou, C. and Liang, C.J. *Structural Non-Isolability in Knowledge-Based Robot
+> Fault Diagnosis: Tie-Break Intervals and Grouped Validation.* Code and data:
+> https://doi.org/10.5281/zenodo.22089173
+
+```bibtex
+@misc{zhou2026nonisolability,
+  author = {Zhou, Chenxuan and Liang, Christy Jie},
+  title  = {Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis:
+            Tie-Break Intervals and Grouped Validation -- code and data},
+  year   = {2026},
+  doi    = {10.5281/zenodo.22089173},
+  url    = {https://doi.org/10.5281/zenodo.22089173}
+}
+```
