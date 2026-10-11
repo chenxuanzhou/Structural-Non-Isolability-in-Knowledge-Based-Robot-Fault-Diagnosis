@@ -159,9 +159,8 @@ anomaly-detection benchmarks in particular have been shown to overstate progress
 depends on an arbitrary rule. The band spans $200$ random orderings of the
 knowledge base's mode declarations, the filled markers the reverse, declaration
 and alphabetical orderings, the open marker an oracle bounding what any tie-break
-could achieve. Every mark is a five-split mean on the splits of
-Table~\ref{tab:baselines}, as are the dashed priors, and the band contains the
-prior. The group assignment below does not move at all. \emph{Right:} against
+could achieve. Every mark and dashed prior is a five-split mean over the splits
+of Table~\ref{tab:baselines}. The group assignment below does not move at all. \emph{Right:} against
 balanced recall (the mean of twelve per-category recalls, which no constant
 predictor can inflate) the ordering is restored and the repair carries
 information the prior does not.}
@@ -362,13 +361,12 @@ literature reports.
 % "tiebreak_grouped").  The full-set sweep is kept under "tiebreak".
 Which member of a tied set is reported is not determined by the ranking. In our
 implementation it is determined by the order the modes happen to be declared in
-the knowledge base. Varying only that order, on the five leave-setting-out
-splits of Table~\ref{tab:baselines} with the retrieval weights fixed a priori
-(Fig.~\ref{fig:teaser}, left): the deployed declaration order gives the
-tabulated $0.169$, alphabetical $0.200$, reverse declaration $0.144$, and $200$
-random orderings give mean $0.159$, s.d.\ $0.027$, range $[0.119, 0.200]$. An
-oracle that always picks the correct member of the tied set reaches $0.281$,
-which bounds what any tie-breaking rule could achieve.
+the knowledge base. Varying only that order on the splits of
+Table~\ref{tab:baselines} (Fig.~\ref{fig:teaser}, left): the deployed
+declaration order gives $0.169$, alphabetical $0.200$, reverse declaration
+$0.144$, and $200$ random orderings give $0.159$ (s.d.\ $0.027$), range
+$[0.119, 0.200]$. An oracle that always picks the correct member of the tied set
+reaches $0.281$, which bounds what any tie-breaking rule could achieve.
 
 The interval is $0.082$ wide. The same five-split mean has a $95\%$ interval of
 $\pm 0.018$ across splits (Section~\ref{sec:repair}), so the arbitrary rule
@@ -381,7 +379,7 @@ order alone would put the retrieval ahead of it.
 
 This is the paper's thesis in numerical form. It has a positive counterpart:
 the \emph{cluster} assignment is tie-break invariant, at $0.342$ under all
-$203$ orderings on every split, because the ties lie inside
+$203$ orderings, because the ties lie inside
 groups and never across them. What the representation determines is the group,
 not the point answer.
 
@@ -439,9 +437,8 @@ Table~\ref{tab:cert} gives the four verdicts, and we distinguish the three
 non-positive ones because they are not the same claim.
 \textbf{Adopted}: the load-torque group is separated at $0.840$ on held-out
 instantiations against $0.562$ for the deployed representation, a $0.504$
-majority floor and $0.431$ under permuted labels, on all five splits. The search
-re-selects per split, mostly signed deviation and within-cycle step (free); the
-unread channels enter on two splits, so the cost class is \emph{pipeline}.
+majority floor and $0.431$ under permuted labels, on all five splits; its cost
+class is \emph{pipeline}, as unread channels enter on two.
 \textbf{Inconclusive}: distal collision has too few fault instantiations for the
 grouped inner search to run, so its $0.776$ comes from the pre-registered
 free-cost dimension set rather than from a search. It exceeds the $0.718$
@@ -545,8 +542,8 @@ circularity at the source and claim only a property of the protocol.
 On the gripping pair, $N \le 3$ instantiations leave the grouped inner search
 unable to run; at $N = 4$--$6$ it runs but the verdict flips between draws; from
 $N \ge 8$ it is stable. Note, though, what it stabilises \emph{on}: reject. The
-repaired representation scores $\approx 0.99$ on the injected pair and the
-deployed one already comes within the adoption margin of it, so
+deployed representation already comes within $0.02$ of the repaired
+$\approx 0.99$, so
 whether the same threshold governs an \emph{adopt} verdict is untested. The collision pair reaches
 the run threshold at the same $N \ge 4$ but is still flipping at $N = 16$.
 voraus-AD supplies $N = 1$ per gripping mode and $N = 3$ for carton collision,

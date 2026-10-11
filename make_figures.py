@@ -127,7 +127,7 @@ def fig_teaser():
              "xtick.labelsize": 7.5, "ytick.labelsize": 7.5}
     with mpl.rc_context(style):
         fig, (ax, bx) = plt.subplots(
-            1, 2, figsize=(7.0, 2.6),
+            1, 2, figsize=(7.2, 2.06),
             gridspec_kw=dict(width_ratios=[1.0, 0.72], wspace=0.55))
 
         # -- left: point answer (top-1) against group answer (cluster top-1) --
