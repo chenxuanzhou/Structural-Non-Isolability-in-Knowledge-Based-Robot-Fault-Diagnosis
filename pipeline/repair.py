@@ -1253,7 +1253,13 @@ def adopt(results_path=RESULTS_OUT, out=ADOPTED_PATH, verbose=True):
             "mean": sc.mean_.tolist(), "scale": sc.scale_.tolist(),
             "coef": clf.coef_.tolist(), "intercept": clf.intercept_.tolist(),
             "n_fit_cycles": len(ids),
-            "cost_class": cert["cost_class"],
+            # The frozen dims are the majority selection, so their cost class
+            # can be lower than the certificate's (which is the worst over the
+            # per-split searches); report both rather than mislabel either.
+            "cost_class": max((GRAMMAR[d]["cost"] for d in dims if d != "mag"),
+                              key=["deployed", "free", "pipeline", "hardware"].index,
+                              default="deployed"),
+            "certificate_cost_class": cert["cost_class"],
             "evidence": {"protocol": "leave-setting-out, 5 stratified splits",
                          "held_out_acc": cert["acc_test"],
                          "deployed_repr_acc": cert["acc_deployed_repr"],

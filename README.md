@@ -26,7 +26,7 @@ manifesting signal families, so the retrieval score assigns them the same value
 for every cycle. Which one is reported is decided by tie-breaking, not evidence.
 On the five leave-setting-out splits used for every comparison below,
 re-ordering the failure modes in the knowledge base moves the five-split mean
-top-1 across `[0.119, 0.200]` — `0.082` wide, more than twice the split-to-split
+top-1 across `[0.1186, 0.2003]` — `0.082` wide, more than twice the split-to-split
 95% interval (`±0.018`), and containing the trivial baseline below (`0.187`).
 Cluster assignment, by contrast, is invariant at `0.342` under all 203 orderings
 on every split. (Swept over all 755 cycles instead of the held-out halves, the
@@ -51,9 +51,11 @@ Against that, the part that holds: identifying which modes are mutually
 non-isolable, searching a grammar of discarded physical dimensions for one that
 separates them, and issuing the result as a **repair certificate** carrying
 held-out accuracy, three controls and a cost class. On the load-torque cluster
-this reaches `0.840` held-out three-way accuracy against `0.562` for the deployed
-representation, and lifts balanced recall from `0.095` (prior) through `0.119`
-(retrieval) to `0.213` — the only stage that clears both trivial references.
+the searched certificate reaches `0.840` held-out three-way accuracy against
+`0.562` for the deployed representation. Its fixed shipping configuration lifts
+balanced recall from `0.095` (prior) through `0.119` (retrieval) to `0.213`, and
+is the only stage that beats the prevalence prior on both top-1 (`0.309` against
+`0.187`) and balanced recall.
 
 ---
 
@@ -146,10 +148,10 @@ written by hand.
 | Repair certificates, protocol comparison, two-stage, flat control, granularity ablation, sensitivity | `pipeline/repair.py` | `results/repair_results.json` |
 | Label-budget curve and its 20-split robustness check | `pipeline/repair.py` (`label_curve_vs_control`) | `results/label_budget_curve.json` |
 | Held-out retrieval weights | `pipeline/held_out_eval.py` | `results/held_out_seeds.json` |
-| Instantiation-count sweep, gripping pair | `pipeline/synth_power.py` | `results/synth_instantiation_power.json` |
+| Instantiation-count sweep, gripping pair (needs the parquet) | `pipeline/synth_power.py` | `results/synth_instantiation_power.json` |
 | Instantiation-count sweep, collision pair | `pipeline/sim_experiments.py --c` | `results/sim_collision_power.json` |
 | Full-chain retrieval over all 755 anomalies | `pipeline/integration_test.py` | `results/integration_results.csv` |
-| Detector-gradient cross-check (a negative result) | `pipeline/eval_retrieve.py` | `results/gradient_crosscheck.json` |
+| Detector-gradient cross-check (a negative result) | `pipeline/eval_retrieve.py` (`audit_gradient_crosscheck()`; reads the interface's per-cycle cache `shared/cache/dataset_all.json`, which is not shipped) | `results/gradient_crosscheck.json` |
 | Detector AUROC, AU-PR, TPR / FPR (needs the parquet) | `mvtflow/train.py` | `results/detector_metrics.json` (written on training; not shipped) |
 
 Figures are rebuilt from those JSON files:
@@ -171,6 +173,13 @@ The other figures in `figures/` (protocol, certificates, instantiation power,
 granularity, label budget) belong to the long version. Their numbers are in the
 paper's tables and text.
 
+To build the paper, put IFAC's official `ifacconf.cls` (from the
+[IFAC author guide](https://www.ifac-control.org/conferences/author-guide)) next
+to `safeprocess2027_final.tex` and run `pdflatex` twice. Without it,
+`tools/ifacconf_local.cls` can stand in: copy it next to the `.tex` as
+`ifacconf.cls`. It is a local approximation for compiling and page-counting
+only, not for submission. The committed PDF was built with it: six pages.
+
 ---
 
 ## Layout
@@ -191,6 +200,7 @@ data/              derived evidence records; see Data above
 results/           every reported number, as JSON
 figures/           vector PDFs, rebuilt by make_figures.py
 voraus-AD_data_source_and_licence_record.pdf   provenance and licence record for the dataset
+tools/             ifacconf_local.cls, a stand-in for IFAC's class (see below)
 ```
 
 Not every file in `pipeline/` is used by the analysis above. `kb_console.py`,
@@ -234,10 +244,18 @@ cross-validation of the greedy search is grouped as well.
 
 Code is released under the MIT License (`LICENSE`).
 
-Derived data in `data/` and `results/` is released under CC BY 4.0. It is derived
-from voraus-AD, which carries its own license — check the
-[dataset repository](https://github.com/vorausrobotik/voraus-ad-dataset) and
-comply with both.
+Derived data in `data/` and `results/` is an adaptation of the voraus-AD dataset
+(Brockmann, Rudolph, Rosenhahn and Wandt, *The voraus-AD dataset for anomaly
+detection in robot applications*, IEEE Transactions on Robotics; rights holder
+voraus robotik GmbH), which is licensed under
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Its
+ShareAlike and NonCommercial terms carry over, so the derived data is released
+under CC BY-NC-SA 4.0 too: non-commercial use only, with attribution, and
+adaptations under the same licence. It contains per-cycle values and labels
+computed from `voraus-ad-dataset-100hz.parquet`; the dataset itself is not
+redistributed here (see the
+[dataset repository](https://github.com/vorausrobotik/voraus-ad-dataset)).
+`voraus-AD_data_source_and_licence_record.pdf` records the source and licence.
 
 ## Citation
 

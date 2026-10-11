@@ -19,9 +19,10 @@ the retrieval scores 0.90x.
 
 Two further references belong beside it:
 
-  BALANCED (MACRO) RECALL -- mean per-category recall.  A constant predictor
-      scores 1/n_classes here however skewed the data, so this is the metric the
-      prior cannot game.  It is where the retrieval, and much more clearly the
+  BALANCED (MACRO) RECALL -- mean per-category recall over the categories in
+      the test half.  A constant predictor scores 1/K here however skewed the
+      data (K = 10 or 11 under leave-setting-out, since three categories have a
+      single instantiation), so this is the metric the prior cannot game.  It is where the retrieval, and much more clearly the
       repair, still show a real effect.
 
   THE TIE-BREAK INTERVAL -- 514 of 755 cycles have an exact rank-1 score tie, so
@@ -186,10 +187,12 @@ def balanced_recall(ctx, quick=False, verbose=True):
     testable, _ = R.testable_clusters()
     mi, ma = defaultdict(list), defaultdict(list)
     per_cat = defaultdict(lambda: defaultdict(list))
+    const_bound = []          # 1/K, K = categories present in the test half
 
     for seed in SEEDS:
         fit, test = R._grouped_split(ctx["ids"], ctx["cat_of"], ctx["set_of"], seed)
         y = [ctx["cat_of"][i] for i in test]
+        const_bound.append(1.0 / len(set(y)))
         maj = Counter(ctx["cat_of"][i] for i in fit).most_common(1)[0][0]
         arms = {"prior (constant)": [maj] * len(test),
                 "retrieval": [ctx["cat_of_fm"][_tied(ctx, i)[0]] for i in test]}
@@ -231,9 +234,12 @@ def balanced_recall(ctx, quick=False, verbose=True):
                                  for c, v in sorted(per_cat[n].items())})
            for n in mi}
     out["uniform_macro"] = 1.0 / len(per_cat["retrieval"])
+    out["constant_macro_bound"] = float(np.mean(const_bound))
     if verbose:
         print("\n2. BALANCED RECALL - mean per-category recall; a constant scores "
-              f"{out['uniform_macro']:.3f} here whatever the skew")
+              f"1/K per split whatever the skew (K = categories in the test half; "
+              f"mean {out['constant_macro_bound']:.3f}), uniform over 12 scores "
+              f"{out['uniform_macro']:.3f}")
         print("                          micro top-1    macro recall")
         for n in ("prior (constant)", "retrieval", "two-stage", "flat control"):
             if n in out:

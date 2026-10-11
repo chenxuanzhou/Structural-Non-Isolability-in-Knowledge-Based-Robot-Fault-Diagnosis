@@ -14,20 +14,24 @@
 % CLASS FILE
 %   ifacconf.cls ships from IFAC, not from CTAN/TeX Live:
 %     https://www.ifac-control.org/conferences/author-guide
-%   The ifacconf.cls sitting next to this file is a LOCAL APPROXIMATION written
-%   only so the draft could be compiled and page-counted.  Delete it and drop in
-%   the official class; this source needs no other change.  Verify the page
-%   count again after you do -- the official geometry will differ.
+%   It is not in this repository.  tools/ifacconf_local.cls is a LOCAL
+%   APPROXIMATION written only so the draft can be compiled and page-counted; it
+%   reproduces the previous build line for line.  To build, copy it next to this
+%   file as ifacconf.cls, or drop in the official class (this source needs no
+%   other change).  Verify the page count again with the official class -- the
+%   official geometry will differ.
 %
 % LENGTH
 %   6 pages final, up to 8 for review.  Cut list if over, in this order:
-%   Sec. 7 granularity paragraph, then Table 2's permuted column, then Sec. 3's
+%   Sec. 8.4 granularity paragraph, then Table 2's permuted column, then Sec. 3's
 %   detector paragraph.
 %
 % PROVENANCE
-%   Every number here traces to results/*.json, except the detector's AUROC,
-%   TPR and FPR in Sec. 3, which mvtflow/train.py computes from the raw parquet
-%   and writes to results/detector_metrics.json.  Most numbers are carried over
+%   Every number here traces to results/*.json, except in Sec. 3: the dataset
+%   counts (2122 / 755 / 1367 / 948 / 419 cycles) are voraus-AD's own, the 0.936
+%   AUROC is cited from \citep{voraus}, and the detector's AUROC, TPR and FPR
+%   are computed by mvtflow/train.py from the raw parquet and written to
+%   results/detector_metrics.json (not shipped).  Most numbers are carried over
 %   from the long version (paper_aei.tex).  The exception is the tie-break
 %   sweep: Sec. 5.2, Fig. 1 and the abstract use its leave-setting-out version
 %   (results/baselines.json, key "tiebreak_grouped"), on the same five splits as
@@ -42,7 +46,7 @@
 % system, LaTeX silently falls back to METAFONT bitmaps, the PDF carries Type 3
 % fonts, and PaperCept refuses the upload ("Bitmapped Font error").  It also
 % restores the fi/fl/ff ligatures in the PDF text layer.
-% VERIFY WITH: pdffonts safeprocess2027.pdf  -- there must be no "Type 3" row.
+% VERIFY WITH: pdffonts safeprocess2027_final.pdf -- there must be no "Type 3" row.
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{graphicx}
@@ -161,7 +165,7 @@ knowledge base's mode declarations, the filled markers the reverse, declaration
 and alphabetical orderings, the open marker an oracle bounding what any tie-break
 could achieve. Every mark and dashed prior is a five-split mean over the splits
 of Table~\ref{tab:baselines}. The group assignment below does not move at all. \emph{Right:} against
-balanced recall (the mean of twelve per-category recalls, which no constant
+balanced recall (mean per-category recall, which no constant
 predictor can inflate) the ordering is restored and the repair carries
 information the prior does not.}
 \label{fig:teaser}
@@ -365,7 +369,7 @@ the knowledge base. Varying only that order on the splits of
 Table~\ref{tab:baselines} (Fig.~\ref{fig:teaser}, left): the deployed
 declaration order gives $0.169$, alphabetical $0.200$, reverse declaration
 $0.144$, and $200$ random orderings give $0.159$ (s.d.\ $0.027$), range
-$[0.119, 0.200]$. An oracle that always picks the correct member of the tied set
+$[0.1186, 0.2003]$. An oracle that always picks the correct member of the tied set
 reaches $0.281$, which bounds what any tie-breaking rule could achieve.
 
 The interval is $0.082$ wide. The same five-split mean has a $95\%$ interval of
@@ -410,7 +414,7 @@ figure exceeds all three.
 the figure we report; ``Ungrouped'' is the identical pipeline under a random
 split over cycles. ``Deployed'' is the current representation on the same
 held-out half and ``Permuted'' the same search with shuffled labels, both
-grouped. Only the load-torque group clears all three controls, and for the
+grouped. Only the load-torque group is adopted, and for the
 collision group the choice of protocol changes the verdict itself, not just the
 number. $^{\dag}$Collision figures come from the pre-registered
 free-cost dimension set: its instantiation count is too low for the grouped inner
@@ -442,8 +446,8 @@ class is \emph{pipeline}, as unread channels enter on two.
 \textbf{Inconclusive}: distal collision has too few fault instantiations for the
 grouped inner search to run, so its $0.776$ comes from the pre-registered
 free-cost dimension set rather than from a search. It exceeds the $0.718$
-majority rate by less than its own sampling error: with $n_\text{test} = 57$ the
-binomial $95\%$ half-width is $\approx 0.108$.
+majority rate by less than its own sampling error: at $n_\text{test} \le 60$ per
+split the binomial $95\%$ half-width is $\ge 0.105$.
 \textbf{Undetermined}: gripping has one instantiation per member, so no grouped
 split exists to evaluate anything on. The distinction from the row above is
 between a grouped \emph{split} and a grouped \emph{search}; collision admits a
@@ -455,11 +459,11 @@ faults from drive over-temperature. Of the four verdicts this is the only claim
 about the plant itself, and it is the classical sensor-placement answer.
 
 End to end, the two-stage system moves point top-1 from $0.169 \pm 0.018$ to
-$0.302 \pm 0.047$ against a stage-1 cluster ceiling of $0.342 \pm 0.025$, and
-balanced recall from $0.119$ to $0.213$; the fixed shipping configuration
-reported in Table~\ref{tab:baselines} reaches $0.309 \pm 0.031$ and $0.869$
+$0.302 \pm 0.047$ against a stage-1 cluster ceiling of $0.342 \pm 0.025$; the
+fixed shipping configuration reported in Table~\ref{tab:baselines} reaches
+$0.309 \pm 0.031$, balanced recall $0.213$ (from $0.119$) and $0.869$
 within the load-torque group. Both are the same metric on the same held-out halves
-($n_\text{test} = 152$): the searched certificate re-selects dimensions per split
+($n_\text{test} = 152$--$163$): the searched certificate re-selects dimensions per split
 and pays the generalisation cost of that selection, the fixed configuration
 none. We headline the certificate because it must include
 the cost of finding the repair. Intervals are $t_{0.975,4} = 2.776$
@@ -542,8 +546,8 @@ circularity at the source and claim only a property of the protocol.
 On the gripping pair, $N \le 3$ instantiations leave the grouped inner search
 unable to run; at $N = 4$--$6$ it runs but the verdict flips between draws; from
 $N \ge 8$ it is stable. Note, though, what it stabilises \emph{on}: reject. The
-deployed representation already comes within $0.02$ of the repaired
-$\approx 0.99$, so
+deployed representation already comes within the $0.02$ adoption margin on the
+fit half, so
 whether the same threshold governs an \emph{adopt} verdict is untested. The collision pair reaches
 the run threshold at the same $N \ge 4$ but is still flipping at $N = 16$.
 voraus-AD supplies $N = 1$ per gripping mode and $N = 3$ for carton collision,
