@@ -179,5 +179,994 @@
       "FM_collision_card",
       "FM_collision_foam"
     ]
-  ]
+  ],
+  "tie_composition_sets": {
+    "n_cycles": 755,
+    "n_tied": 514,
+    "phase_class_rule": "line_kg.PHASE_OF_ACTION[dominant_cycle_phase]; 'undefined' is a VOID_* segment, where no mode gets the phase term",
+    "sets": {
+      "FM_axisweight+FM_losecan": {
+        "n": 238,
+        "phase_class": {
+          "transfer": 238
+        },
+        "true_category": {
+          "friction": 52,
+          "axisweight": 47,
+          "varweight": 28,
+          "losecan": 26,
+          "coll_foam": 25,
+          "commut": 18,
+          "coll_cable": 15,
+          "platform": 11,
+          "entangled": 6,
+          "coll_card": 5,
+          "invalidgrip": 5
+        },
+        "true_mode_in_set": 73
+      },
+      "FM_axisweight+FM_varweight": {
+        "n": 199,
+        "phase_class": {
+          "pick": 126,
+          "place": 73
+        },
+        "true_category": {
+          "axisweight": 41,
+          "friction": 38,
+          "commut": 23,
+          "coll_foam": 21,
+          "varweight": 21,
+          "losecan": 18,
+          "platform": 16,
+          "coll_cable": 13,
+          "coll_card": 3,
+          "entangled": 3,
+          "invalidgrip": 2
+        },
+        "true_mode_in_set": 62
+      },
+      "FM_axisweight+FM_losecan+FM_varweight": {
+        "n": 61,
+        "phase_class": {
+          "undefined": 61
+        },
+        "true_category": {
+          "axisweight": 15,
+          "coll_foam": 9,
+          "losecan": 9,
+          "coll_cable": 6,
+          "varweight": 5,
+          "commut": 5,
+          "friction": 4,
+          "platform": 4,
+          "coll_card": 3,
+          "invalidgrip": 1
+        },
+        "true_mode_in_set": 29
+      },
+      "FM_miscommutation+FM_overtemp": {
+        "n": 16,
+        "phase_class": {
+          "transfer": 7,
+          "pick": 7,
+          "place": 2
+        },
+        "true_category": {
+          "commut": 11,
+          "axisweight": 3,
+          "friction": 2
+        },
+        "true_mode_in_set": 11
+      }
+    }
+  },
+  "phase_sensitivity": {
+    "w_phase_deployed": 0.2,
+    "weights": [
+      0.0,
+      0.1,
+      0.2,
+      0.5,
+      1.0,
+      2.0,
+      3.0
+    ],
+    "grouped_split": "repair._grouped_split (leave-setting-out), held-out half, mean over seeds",
+    "split_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "n_test": [
+      396,
+      392,
+      414,
+      364,
+      403
+    ],
+    "oracle_all_with_phase": 0.27947019867549666,
+    "oracle_all_without_phase": 0.34172185430463575,
+    "oracle_grouped_with_phase": 0.2810863138953702,
+    "oracle_grouped_without_phase": 0.34244700233980935,
+    "true_in_group_not_in_tied": 46,
+    "group_definition": "the twin group (cluster_map) of the rank-1 mode",
+    "by_w_phase": {
+      "0.0": {
+        "n_tied": 514,
+        "composition": {
+          "FM_axisweight+FM_losecan+FM_varweight": 498,
+          "FM_miscommutation+FM_overtemp": 16
+        },
+        "point_top1": 0.1337748344370861,
+        "cluster_top1": 0.34172185430463575,
+        "oracle_all": 0.34172185430463575,
+        "oracle_grouped_mean": 0.34244700233980935,
+        "oracle_grouped_per_split": [
+          0.32575757575757575,
+          0.35459183673469385,
+          0.3188405797101449,
+          0.36813186813186816,
+          0.34491315136476425
+        ],
+        "true_in_group_not_in_tied": 0,
+        "true_in_group_not_in_tied_by_category": {}
+      },
+      "0.1": {
+        "n_tied": 514,
+        "composition": {
+          "FM_axisweight+FM_losecan": 238,
+          "FM_axisweight+FM_varweight": 199,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        },
+        "point_top1": 0.1629139072847682,
+        "cluster_top1": 0.3403973509933775,
+        "oracle_all": 0.27947019867549666,
+        "oracle_grouped_mean": 0.2810863138953702,
+        "oracle_grouped_per_split": [
+          0.2828282828282828,
+          0.29081632653061223,
+          0.2536231884057971,
+          0.3076923076923077,
+          0.2704714640198511
+        ],
+        "true_in_group_not_in_tied": 46,
+        "true_in_group_not_in_tied_by_category": {
+          "varweight": 28,
+          "losecan": 18
+        }
+      },
+      "0.2": {
+        "n_tied": 514,
+        "composition": {
+          "FM_axisweight+FM_losecan": 238,
+          "FM_axisweight+FM_varweight": 199,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        },
+        "point_top1": 0.1629139072847682,
+        "cluster_top1": 0.3403973509933775,
+        "oracle_all": 0.27947019867549666,
+        "oracle_grouped_mean": 0.2810863138953702,
+        "oracle_grouped_per_split": [
+          0.2828282828282828,
+          0.29081632653061223,
+          0.2536231884057971,
+          0.3076923076923077,
+          0.2704714640198511
+        ],
+        "true_in_group_not_in_tied": 46,
+        "true_in_group_not_in_tied_by_category": {
+          "varweight": 28,
+          "losecan": 18
+        }
+      },
+      "0.5": {
+        "n_tied": 514,
+        "composition": {
+          "FM_axisweight+FM_losecan": 238,
+          "FM_axisweight+FM_varweight": 199,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        },
+        "point_top1": 0.1629139072847682,
+        "cluster_top1": 0.3403973509933775,
+        "oracle_all": 0.27947019867549666,
+        "oracle_grouped_mean": 0.2810863138953702,
+        "oracle_grouped_per_split": [
+          0.2828282828282828,
+          0.29081632653061223,
+          0.2536231884057971,
+          0.3076923076923077,
+          0.2704714640198511
+        ],
+        "true_in_group_not_in_tied": 46,
+        "true_in_group_not_in_tied_by_category": {
+          "varweight": 28,
+          "losecan": 18
+        }
+      },
+      "1.0": {
+        "n_tied": 514,
+        "composition": {
+          "FM_axisweight+FM_losecan": 238,
+          "FM_axisweight+FM_varweight": 199,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        },
+        "point_top1": 0.1629139072847682,
+        "cluster_top1": 0.3403973509933775,
+        "oracle_all": 0.27947019867549666,
+        "oracle_grouped_mean": 0.2810863138953702,
+        "oracle_grouped_per_split": [
+          0.2828282828282828,
+          0.29081632653061223,
+          0.2536231884057971,
+          0.3076923076923077,
+          0.2704714640198511
+        ],
+        "true_in_group_not_in_tied": 46,
+        "true_in_group_not_in_tied_by_category": {
+          "varweight": 28,
+          "losecan": 18
+        }
+      },
+      "2.0": {
+        "n_tied": 514,
+        "composition": {
+          "FM_axisweight+FM_losecan": 238,
+          "FM_axisweight+FM_varweight": 199,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        },
+        "point_top1": 0.1629139072847682,
+        "cluster_top1": 0.3403973509933775,
+        "oracle_all": 0.27947019867549666,
+        "oracle_grouped_mean": 0.2810863138953702,
+        "oracle_grouped_per_split": [
+          0.2828282828282828,
+          0.29081632653061223,
+          0.2536231884057971,
+          0.3076923076923077,
+          0.2704714640198511
+        ],
+        "true_in_group_not_in_tied": 46,
+        "true_in_group_not_in_tied_by_category": {
+          "varweight": 28,
+          "losecan": 18
+        }
+      },
+      "3.0": {
+        "n_tied": 514,
+        "composition": {
+          "FM_axisweight+FM_losecan": 238,
+          "FM_axisweight+FM_varweight": 199,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        },
+        "point_top1": 0.1629139072847682,
+        "cluster_top1": 0.3403973509933775,
+        "oracle_all": 0.27947019867549666,
+        "oracle_grouped_mean": 0.2810863138953702,
+        "oracle_grouped_per_split": [
+          0.2828282828282828,
+          0.29081632653061223,
+          0.2536231884057971,
+          0.3076923076923077,
+          0.2704714640198511
+        ],
+        "true_in_group_not_in_tied": 46,
+        "true_in_group_not_in_tied_by_category": {
+          "varweight": 28,
+          "losecan": 18
+        }
+      }
+    }
+  },
+  "kb_columns": {
+    "column": "scope expanded to a joint set, manifest families, phase hint",
+    "modes": {
+      "FM_friction": {
+        "scope": "any",
+        "joints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "motor_torque",
+          "robot_current",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "any"
+      },
+      "FM_miscommutation": {
+        "scope": "any",
+        "joints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "motor_torque",
+          "robot_current"
+        ],
+        "phase_hint": "any"
+      },
+      "FM_misgrip": {
+        "scope": "distal",
+        "joints": [
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "joint_position",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "grip"
+      },
+      "FM_losecan": {
+        "scope": "load",
+        "joints": [
+          1,
+          2,
+          3
+        ],
+        "families": [
+          "motor_torque",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "transfer"
+      },
+      "FM_axisweight": {
+        "scope": "load",
+        "joints": [
+          1,
+          2,
+          3
+        ],
+        "families": [
+          "motor_torque",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "any"
+      },
+      "FM_collision_foam": {
+        "scope": "distal",
+        "joints": [
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "joint_velocity",
+          "motor_torque"
+        ],
+        "phase_hint": "transfer"
+      },
+      "FM_collision_cable": {
+        "scope": "any",
+        "joints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "joint_velocity",
+          "motor_torque"
+        ],
+        "phase_hint": "transfer"
+      },
+      "FM_collision_card": {
+        "scope": "distal",
+        "joints": [
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "joint_velocity",
+          "motor_torque"
+        ],
+        "phase_hint": "transfer"
+      },
+      "FM_varweight": {
+        "scope": "load",
+        "joints": [
+          1,
+          2,
+          3
+        ],
+        "families": [
+          "motor_torque",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "grip"
+      },
+      "FM_cable_routed": {
+        "scope": "any",
+        "joints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "joint_velocity",
+          "motor_torque",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "any"
+      },
+      "FM_invalidgrip": {
+        "scope": "distal",
+        "joints": [
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "joint_position",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "grip"
+      },
+      "FM_platform": {
+        "scope": [
+          1,
+          2
+        ],
+        "joints": [
+          1,
+          2
+        ],
+        "families": [
+          "joint_velocity",
+          "motor_torque",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "any"
+      },
+      "FM_backlash": {
+        "scope": "any",
+        "joints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "joint_position",
+          "torque_sensor_a"
+        ],
+        "phase_hint": "any"
+      },
+      "FM_overtemp": {
+        "scope": "any",
+        "joints": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "families": [
+          "motor_torque",
+          "robot_current"
+        ],
+        "phase_hint": "any"
+      }
+    },
+    "n_equal_pairs": 6,
+    "n_equal_pairs_same_phase_hint": 3,
+    "equal_pairs": [
+      {
+        "modes": [
+          "FM_miscommutation",
+          "FM_overtemp"
+        ],
+        "phase_hints": [
+          "any",
+          "any"
+        ],
+        "same_phase_hint": true,
+        "phase_relation": "same",
+        "n_first_higher": 0,
+        "n_equal": 755,
+        "n_second_higher": 0
+      },
+      {
+        "modes": [
+          "FM_misgrip",
+          "FM_invalidgrip"
+        ],
+        "phase_hints": [
+          "grip",
+          "grip"
+        ],
+        "same_phase_hint": true,
+        "phase_relation": "same",
+        "n_first_higher": 0,
+        "n_equal": 755,
+        "n_second_higher": 0
+      },
+      {
+        "modes": [
+          "FM_losecan",
+          "FM_axisweight"
+        ],
+        "phase_hints": [
+          "transfer",
+          "any"
+        ],
+        "same_phase_hint": false,
+        "phase_relation": "FM_axisweight covers FM_losecan",
+        "n_first_higher": 0,
+        "n_equal": 397,
+        "n_second_higher": 358
+      },
+      {
+        "modes": [
+          "FM_losecan",
+          "FM_varweight"
+        ],
+        "phase_hints": [
+          "transfer",
+          "grip"
+        ],
+        "same_phase_hint": false,
+        "phase_relation": "disjoint",
+        "n_first_higher": 318,
+        "n_equal": 79,
+        "n_second_higher": 358
+      },
+      {
+        "modes": [
+          "FM_axisweight",
+          "FM_varweight"
+        ],
+        "phase_hints": [
+          "any",
+          "grip"
+        ],
+        "same_phase_hint": false,
+        "phase_relation": "FM_axisweight covers FM_varweight",
+        "n_first_higher": 318,
+        "n_equal": 437,
+        "n_second_higher": 0
+      },
+      {
+        "modes": [
+          "FM_collision_foam",
+          "FM_collision_card"
+        ],
+        "phase_hints": [
+          "transfer",
+          "transfer"
+        ],
+        "same_phase_hint": true,
+        "phase_relation": "same",
+        "n_first_higher": 0,
+        "n_equal": 755,
+        "n_second_higher": 0
+      }
+    ],
+    "n_strict_inclusions": 16,
+    "strict_inclusions": [
+      {
+        "inner": "FM_miscommutation",
+        "outer": "FM_friction",
+        "phase_hints": [
+          "any",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_misgrip",
+        "outer": "FM_backlash",
+        "phase_hints": [
+          "grip",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_losecan",
+        "outer": "FM_friction",
+        "phase_hints": [
+          "transfer",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_losecan",
+        "outer": "FM_cable_routed",
+        "phase_hints": [
+          "transfer",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_axisweight",
+        "outer": "FM_friction",
+        "phase_hints": [
+          "any",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_axisweight",
+        "outer": "FM_cable_routed",
+        "phase_hints": [
+          "any",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_collision_foam",
+        "outer": "FM_collision_cable",
+        "phase_hints": [
+          "transfer",
+          "transfer"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_collision_foam",
+        "outer": "FM_cable_routed",
+        "phase_hints": [
+          "transfer",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_collision_cable",
+        "outer": "FM_cable_routed",
+        "phase_hints": [
+          "transfer",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_collision_card",
+        "outer": "FM_collision_cable",
+        "phase_hints": [
+          "transfer",
+          "transfer"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_collision_card",
+        "outer": "FM_cable_routed",
+        "phase_hints": [
+          "transfer",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_varweight",
+        "outer": "FM_friction",
+        "phase_hints": [
+          "grip",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_varweight",
+        "outer": "FM_cable_routed",
+        "phase_hints": [
+          "grip",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_invalidgrip",
+        "outer": "FM_backlash",
+        "phase_hints": [
+          "grip",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_platform",
+        "outer": "FM_cable_routed",
+        "phase_hints": [
+          "any",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      },
+      {
+        "inner": "FM_overtemp",
+        "outer": "FM_friction",
+        "phase_hints": [
+          "any",
+          "any"
+        ],
+        "outer_phase_covers_inner": true
+      }
+    ],
+    "pair_scores_over": "755 records, deployed weights"
+  },
+  "localization": {
+    "dominant_joint": {
+      "1": 169,
+      "2": 557,
+      "3": 29,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    "dominant_joint_rule": "joint with the largest absolute peak torque deviation (attribution_bridge.to_bridge_record)",
+    "dominant_joint_distal": 0,
+    "top_joint_by_z": {
+      "1": 69,
+      "2": 25,
+      "3": 34,
+      "4": 139,
+      "5": 420,
+      "6": 68
+    },
+    "distal_modes": [
+      "FM_misgrip",
+      "FM_collision_foam",
+      "FM_collision_card",
+      "FM_invalidgrip"
+    ],
+    "distal_joint_match": {
+      "FM_misgrip": 0,
+      "FM_collision_foam": 0,
+      "FM_collision_card": 0,
+      "FM_invalidgrip": 0
+    },
+    "distal_joint_match_total": 0,
+    "rank_rule": "median_rank: position in retrieve()'s order (ties in declaration order); median_best_rank: 1 + modes scoring strictly higher",
+    "collision": {
+      "categories": [
+        "coll_foam",
+        "coll_cable",
+        "coll_card"
+      ],
+      "n": 142,
+      "median_rank": 11.0,
+      "median_best_rank": 11.0
+    },
+    "gripping": {
+      "categories": [
+        "misgrip",
+        "invalidgrip"
+      ],
+      "n": 23,
+      "median_rank": 10.0,
+      "median_best_rank": 10.0
+    },
+    "per_category": {
+      "friction": {
+        "n": 144,
+        "median_rank": 5.0,
+        "median_best_rank": 5.0
+      },
+      "axisweight": {
+        "n": 156,
+        "median_rank": 2.0,
+        "median_best_rank": 1.0
+      },
+      "coll_foam": {
+        "n": 72,
+        "median_rank": 13.0,
+        "median_best_rank": 13.0
+      },
+      "coll_cable": {
+        "n": 48,
+        "median_rank": 9.0,
+        "median_best_rank": 8.0
+      },
+      "coll_card": {
+        "n": 22,
+        "median_rank": 12.0,
+        "median_best_rank": 11.0
+      },
+      "misgrip": {
+        "n": 11,
+        "median_rank": 9.0,
+        "median_best_rank": 9.0
+      },
+      "losecan": {
+        "n": 74,
+        "median_rank": 2.0,
+        "median_best_rank": 2.0
+      },
+      "varweight": {
+        "n": 80,
+        "median_rank": 3.0,
+        "median_best_rank": 2.5
+      },
+      "entangled": {
+        "n": 10,
+        "median_rank": 6.0,
+        "median_best_rank": 5.0
+      },
+      "invalidgrip": {
+        "n": 12,
+        "median_rank": 13.0,
+        "median_best_rank": 12.0
+      },
+      "commut": {
+        "n": 89,
+        "median_rank": 7.0,
+        "median_best_rank": 7.0
+      },
+      "platform": {
+        "n": 37,
+        "median_rank": 4.0,
+        "median_best_rank": 4.0
+      }
+    }
+  },
+  "route_margin_tau": {
+    "tau": 0.15,
+    "tau_chosen_on": "the same 755 cycles it is evaluated on (in-sample)",
+    "margin_definition": "rank-1 score minus the best score of a mode outside the rank-1 cluster (resolve(), rounded to 4 decimals)",
+    "in_sample": {
+      "tau": 0.15,
+      "n": 755,
+      "n_abstained": 122,
+      "coverage": 0.83841059602649,
+      "cluster_acc_accepted": 0.3712480252764613,
+      "cluster_acc_abstained": 0.18032786885245902,
+      "abstention_precision": 0.819672131147541,
+      "n_wrong_abstained": 100,
+      "share_of_errors_abstained": 0.20080321285140562
+    },
+    "scan": [
+      {
+        "tau": 0.05,
+        "n": 755,
+        "n_abstained": 42,
+        "coverage": 0.9443708609271523,
+        "cluster_acc_accepted": 0.3450210378681627,
+        "cluster_acc_abstained": 0.2619047619047619,
+        "abstention_precision": 0.7380952380952381,
+        "n_wrong_abstained": 31,
+        "share_of_errors_abstained": 0.06224899598393574
+      },
+      {
+        "tau": 0.1,
+        "n": 755,
+        "n_abstained": 68,
+        "coverage": 0.909933774834437,
+        "cluster_acc_accepted": 0.3551673944687045,
+        "cluster_acc_abstained": 0.19117647058823528,
+        "abstention_precision": 0.8088235294117647,
+        "n_wrong_abstained": 55,
+        "share_of_errors_abstained": 0.11044176706827309
+      },
+      {
+        "tau": 0.15,
+        "n": 755,
+        "n_abstained": 122,
+        "coverage": 0.83841059602649,
+        "cluster_acc_accepted": 0.3712480252764613,
+        "cluster_acc_abstained": 0.18032786885245902,
+        "abstention_precision": 0.819672131147541,
+        "n_wrong_abstained": 100,
+        "share_of_errors_abstained": 0.20080321285140562
+      },
+      {
+        "tau": 0.16,
+        "n": 755,
+        "n_abstained": 147,
+        "coverage": 0.8052980132450331,
+        "cluster_acc_accepted": 0.37664473684210525,
+        "cluster_acc_abstained": 0.19047619047619047,
+        "abstention_precision": 0.8095238095238095,
+        "n_wrong_abstained": 119,
+        "share_of_errors_abstained": 0.2389558232931727
+      },
+      {
+        "tau": 0.17,
+        "n": 755,
+        "n_abstained": 317,
+        "coverage": 0.5801324503311258,
+        "cluster_acc_accepted": 0.3698630136986301,
+        "cluster_acc_abstained": 0.2996845425867508,
+        "abstention_precision": 0.7003154574132492,
+        "n_wrong_abstained": 222,
+        "share_of_errors_abstained": 0.4457831325301205
+      },
+      {
+        "tau": 0.2,
+        "n": 755,
+        "n_abstained": 398,
+        "coverage": 0.4728476821192053,
+        "cluster_acc_accepted": 0.3949579831932773,
+        "cluster_acc_abstained": 0.2914572864321608,
+        "abstention_precision": 0.7085427135678392,
+        "n_wrong_abstained": 282,
+        "share_of_errors_abstained": 0.5662650602409639
+      },
+      {
+        "tau": 0.25,
+        "n": 755,
+        "n_abstained": 432,
+        "coverage": 0.4278145695364238,
+        "cluster_acc_accepted": 0.4117647058823529,
+        "cluster_acc_abstained": 0.28703703703703703,
+        "abstention_precision": 0.7129629629629629,
+        "n_wrong_abstained": 308,
+        "share_of_errors_abstained": 0.6184738955823293
+      }
+    ],
+    "n_margin_one_sixth": 151,
+    "one_sixth_rule": "cluster_margin == round(1/6, 4) == 0.1667",
+    "n_margin_within_5e-4_of_one_sixth": 153,
+    "one_sixth_pairs": {
+      "FM_axisweight cluster vs FM_platform": 151
+    },
+    "one_sixth_record_families": {
+      "motor_torque+system_current+torque_sensor_a": 151
+    },
+    "one_sixth_no_joint_gated_evidence": 151,
+    "one_sixth_cluster_acc": 0.41721854304635764,
+    "auroc_margin_vs_cluster_correct": 0.5942485896894971,
+    "fit_half_selection": {
+      "splits": "repair._stratified_split, seeds 0-199",
+      "candidates": [
+        0.05,
+        0.1,
+        0.15,
+        0.16,
+        0.17,
+        0.2,
+        0.25
+      ],
+      "rule": "on the fit half keep taus with coverage >= 0.8 and at least one abstention; take the highest abstention precision; ties to the smaller tau; score it on the test half",
+      "min_coverage": 0.8,
+      "chosen_tau_counts": {
+        "0.05": 1,
+        "0.1": 84,
+        "0.15": 95,
+        "0.16": 20
+      },
+      "fit_precision_mean": 0.8278389376839145,
+      "heldout_precision_mean": 0.7988620506659995,
+      "heldout_precision_p2_5": 0.7221354166666667,
+      "heldout_precision_p97_5": 0.8784777424483308,
+      "heldout_coverage_mean": 0.8667282321899736,
+      "shipped_tau_heldout_precision_mean": 0.8209701806783072,
+      "shipped_tau_heldout_precision_p2_5": 0.7543787748058671,
+      "shipped_tau_heldout_precision_p97_5": 0.8853803790983606,
+      "in_sample_precision_shipped_tau": 0.819672131147541
+    }
+  }
 }
