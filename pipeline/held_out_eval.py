@@ -5,9 +5,10 @@ WHAT IS TUNED
 Every retrieval number in the paper comes from line_kg.retrieve() with its
 shipped weights. Besides the joint-match and family-Jaccard terms (both fixed at
 1, and w_signature fixed at 0), it has three free weights: w_evidence, w_phase
-and w_coverage, shipped as (0.2, 0.2, 0.15). Those values were set by looking at
-all 755 cycles. This script measures what a choice made without the test cycles
-gives instead.
+and w_coverage, shipped as (0.2, 0.2, 0.15). They were settled during
+development on these 755 cycles (line_kg.retrieve's docstring records the
+held-out comparisons on random halves that chose the evidence term). This script
+measures what a choice made without the test cycles gives instead.
 
 MAIN EXPERIMENT (`retune_deployed`)
 -----------------------------------

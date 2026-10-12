@@ -1,61 +1,67 @@
 # Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis
 
-Code and derived data for a study of what a knowledge-graph fault-diagnosis
-pipeline **cannot** decide, and what changing its representation would fix.
+Code and derived data for a study of what an FMEA-based diagnosis layer for an
+industrial robot can and cannot decide, and which change of representation helps.
 
 The paper, *Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis:
 Tie-Break Intervals and Grouped Validation* (SAFEPROCESS 2027 manuscript), is
 `safeprocess2027_final.tex` / `safeprocess2027_final.pdf`. Everything else in
 this repository is the experimental record behind it.
 
-Built on [voraus-AD](https://github.com/vorausrobotik/voraus-ad-dataset), a
-six-joint collaborative robot performing pick-and-place, with 12 injected
-anomaly types over 755 anomalous cycles.
+The data come from [voraus-AD](https://github.com/vorausrobotik/voraus-ad-dataset):
+a six-axis robot doing pick-and-place, 12 anomaly types, 755 anomalous cycles
+from 72 fault instantiations (`setting` values).
 
 ---
 
-## What this repository shows
+## Main results
 
-Coupling an anomaly detector to an FMEA knowledge base produces a ranked list of
-candidate causes. On this benchmark that list has three problems, and they are
-the subject of the code here.
+The diagnosis layer scores the 14 failure modes of a hand-written FMEA knowledge
+base against the per-signal deviations of a cycle and returns a ranked list.
+Unless stated otherwise, numbers are means over five leave-setting-out splits,
+in which every fault instantiation is wholly in the training half or wholly in
+the test half.
 
-**1. Most rank-1 answers are structurally tied.** In 514 of 755 anomalies
-(68.1%) two or more failure modes carry identical affected joints and identical
-manifesting signal families, so the retrieval score assigns them the same value
-for every cycle. Which one is reported is decided by tie-breaking, not evidence.
-On the five leave-setting-out splits used for every comparison below,
-re-ordering the failure modes in the knowledge base moves the five-split mean
-top-1 across `[0.1186, 0.2003]` — `0.082` wide, more than twice the split-to-split
-95% interval (`±0.018`), and containing the trivial baseline below (`0.187`).
-Cluster assignment, by contrast, is invariant at `0.342` under all 203 orderings
-on every split. (Swept over all 755 cycles instead of the held-out halves, the
-same interval is `[0.117, 0.199]` and the invariant cluster accuracy `0.340`.)
+**1. Ties.** In 514 of 755 anomalous cycles two or three failure modes share the
+top score. Every tie lies inside one of four groups of modes whose declared
+signatures (joint scope, signal families, phase hint) are identical or, in the
+load-torque group, contain one another. 498 of the ties are in the load-torque
+group.
 
-**2. A constant beats the ranking.** A *prevalence prior* — rank the failure
-modes by how often they occurred in the fit half, emit that same ranking for
-every cycle, read no evidence — scores higher than the deployed retrieval on
-top-1, top-3, top-5, MRR and cluster accuracy. It loses only on balanced recall
-(mean per-category recall), which is the one metric a constant predictor cannot
-game, and which is therefore the metric the rest of the analysis uses.
+**2. The top-1 figure depends on the declaration order.** Only 12 relative
+orders of the tied modes can change the result. Over them, top-1 accuracy ranges
+from `0.119` to `0.200` (mean `0.160`, equal to top-1 with tied modes sharing the
+credit). The group of the top-ranked mode is the same under every order
+(group accuracy `0.342`).
 
-**3. The validation protocol decides a deployment question.** The 72
-`setting` values in voraus-AD are repeated instantiations of single physical
-faults, 4–20 cycles each. Under a random split the pipeline certifies a
-representation repair for the distal-collision cluster at `0.830` and adopts it
-on all five splits; under leave-setting-out validation the same pipeline rejects
-it. Nothing in the ungrouped run looks wrong, and permuted-label controls do not
-catch it.
+**3. A prevalence prior is a better reference than uniform chance.** Ranking the
+modes by their training-half frequency, the same for every cycle, gives top-1
+`0.187`, inside the range above, and is better than the retrieval on top-3,
+top-5, MRR and group accuracy under every order. On balanced recall (mean
+per-category recall, tied modes sharing credit) the retrieval is slightly ahead,
+`0.105` against `0.095`.
 
-Against that, the part that holds: identifying which modes are mutually
-non-isolable, searching a grammar of discarded physical dimensions for one that
-separates them, and issuing the result as a **repair certificate** carrying
-held-out accuracy, three controls and a cost class. On the load-torque cluster
-the searched certificate reaches `0.840` held-out three-way accuracy against
-`0.562` for the deployed representation. Its fixed shipping configuration lifts
-balanced recall from `0.095` (prior) through `0.119` (retrieval) to `0.213`, and
-is the only stage that beats the prevalence prior on both top-1 (`0.309` against
-`0.187`) and balanced recall.
+**4. Certificates.** For each group, a greedy search over named statistics of
+the existing signals looks for one that separates the members, and reports the
+result with held-out accuracy, three controls and a cost class. For the
+load-torque group the sign of the deviation does it: `0.840` within the group on
+unseen instantiations, against `0.562` for the deployed features. The free set
+{sign, step} reaches `0.869`. Collision: not adopted (no grouped search can run
+with one carton instantiation per training half). Gripping: undetermined (one
+instantiation per mode). Commutation/over-temperature: untestable (no
+over-temperature instance).
+
+**5. Grouped validation changes the decision.** Under a random split over cycles
+the search adopts a collision repair on every split. With one setting held out
+at a time, the same search and rule adopt it on 4 of 9 folds, and its held-out
+accuracy (`0.67` to `0.75`) is below the majority rate (`0.766`). A
+permuted-label control over cycles does not detect this; a permutation over
+whole settings does.
+
+**6. Controls.** A flat 12-way classifier over the same features reaches `0.525`
+top-1 against `0.309` for the two-stage system, and is ahead from about 8
+labelled cycles. Sending every cycle to the load-torque resolver gives `0.349`,
+so the two-stage gain comes from the resolver, not from the routing.
 
 ---
 
@@ -77,51 +83,23 @@ On Windows the second command is `.venv\Scripts\pip install -r requirements.txt`
 
 ## Reproduce without downloading the dataset
 
-Most results are reproducible from the derived evidence records shipped in
-`data/`, with no need for the 1 GB parquet. Scripts import each other flatly, so
-run them from inside `pipeline/`.
+Most results run from the derived evidence records in `data/`; the 1 GB parquet
+is not needed. Scripts import each other flatly, so run them from inside
+`pipeline/`.
 
-```bash
-cd pipeline && python baselines.py
-```
+| Command | What it computes | Output |
+|---|---|---|
+| `python baselines.py` | prevalence prior, balanced recall (declared order and tie-shared), exact tie-break enumeration, tie-robust comparison, set-valued coverage, constant router | `results/baselines.json` |
+| `python distinguishability.py` | twin groups, routes and the margin `tau`, tie composition, phase-weight sweep, knowledge-base columns, localization, authoring sensitivity | `results/distinguishability_results.json` |
+| `python repair.py --control --labels --sensitivity` | repair certificates, random vs leave-setting-out comparison, flat classifier, label-budget curve, granularity ablation, sensitivity sweep (the longest run) | `results/repair_results.json`, `results/label_budget_curve.json` |
+| `python certificate_checks.py` | per-split searched dimensions, nested fixed configuration, routing, within-group confusion, all dimension subsets, mode-level signature term, label budget over 20 splits | `results/certificate_checks.json` |
+| `python protocol_check.py` | collision group under random and grouped validation, nine-fold comparison, setting-level permutation tests (about 20 minutes) | `results/protocol_check.json` |
+| `python held_out_eval.py` | the deployed retrieval weights re-chosen on each leave-setting-out training half; the earlier stratified experiment under `legacy` | `results/held_out_seeds.json` |
 
-That reproduces the prevalence prior, the balanced-recall comparison and the
-tie-break interval — both the leave-setting-out sweep the paper reports and the
-full-set sweep — and writes `results/baselines.json`.
-
-```bash
-cd pipeline && python distinguishability.py
-```
-
-Structural twin clusters, route assignment, cluster accuracy and the
-margin-based abstention. Add `--probe` (needs the parquet) for the separability
-test that shows the clusters are a property of the representation rather than of
-the robot.
-
-```bash
-cd pipeline && python repair.py --control --labels --sensitivity
-```
-
-The repair certificates, the leave-setting-out vs random protocol comparison, the
-flat-classifier control, the label-budget curve, the granularity ablation and the
-sensitivity sweep. This is the longest run of the four.
-
-```bash
-cd pipeline && python held_out_eval.py
-```
-
-Re-tunes the three free weights of the deployed retrieval (evidence, phase,
-coverage) on the fit half of each of the five leave-setting-out splits and
-scores the choice on the held-out half, next to the shipped weights and the
-prevalence prior. The earlier experiment, which tuned an older scorer on
-stratified random splits, is rerun and stored under `legacy`.
-
-The results that need the full dataset are the detector's own AUROC, AU-PR and
-operating point (TPR / FPR), because the detector is trained on raw telemetry
-(`mvtflow/`); the semi-synthetic instantiation sweep (`synth_power.py`), which
-injects faults into raw normal cycles; the full-chain run over all 755
+These need the parquet: the detector (`mvtflow/`), the semi-synthetic
+instantiation sweep (`synth_power.py`), the full-chain run over all 755
 anomalies (`integration_test.py`), which rebuilds the evidence records from raw
-telemetry; and the separability probe (`distinguishability.py --probe`).
+telemetry, and the separability probe (`distinguishability.py --probe`).
 
 ---
 
@@ -129,56 +107,53 @@ telemetry; and the separability probe (`distinguishability.py --probe`).
 
 | Path | Contents |
 |---|---|
-| `data/records_cache.json` | Per-cycle **evidence records**: detector verdict and score, dominant joint and cycle phase, top-k attributed signals with observed/expected/z, and the fixed-slot signature block. Everything downstream reads this. |
-| `data/repair_features.json` | The `unread` supplement — channels present in the parquet that the attribution never reads. By definition these cannot come from the evidence record. |
-| `data/payload_torque.json` | Carried-payload torque measured from normal cycles by pose matching (−17.2 N·m on J2 against +14.0 on J3). Used by the semi-synthetic fault injection. |
+| `data/records_cache.json` | Per-cycle **evidence records** for the 755 anomalous cycles: dominant joint and cycle phase, the five channels with the largest peak z (observed, expected, z) and the fixed-slot signature block. The `verdict` field is the ground-truth label; no detector score is stored, so every diagnosis number assumes perfect detection. |
+| `data/repair_features.json` | The `unread` supplement: channels present in the parquet that the attribution never reads. |
+| `data/payload_torque.json` | Carried-payload torque measured from normal cycles by pose matching (-17.2 N·m on J2, +14.0 on J3). Used by the semi-synthetic fault injection. |
 
 These are **derived** from voraus-AD, not a copy of it. To regenerate them, or to
-train the detector, download
-`voraus-ad-dataset-100hz.parquet` from
+train the detector, download `voraus-ad-dataset-100hz.parquet` from
 [the dataset release](https://github.com/vorausrobotik/voraus-ad-dataset) and
 place it in `data/`.
 
 ---
 
-## Where each number comes from
+## Where the paper's numbers come from
 
-Every reported figure traces to a script and a JSON key. No number is a constant
-written by hand.
+| Paper | Source |
+|---|---|
+| Sec. 3, retrieval weights re-chosen on training halves | `held_out_seeds.json` |
+| Sec. 4, ties, groups, phase, routes, `tau`, authoring sensitivity | `distinguishability_results.json` |
+| Table 1 and Sec. 5.1 | `baselines.json` → `prior_vs_retrieval`, `tie_robust`, `balanced_recall_expected`, `balanced_recall` |
+| Fig. 1 and Sec. 5.2 | `baselines.json` → `tiebreak_exact`, `set_valued` |
+| Table 2 and Sec. 6 | `repair_results.json` (certificates, fixed configuration, summary), `certificate_checks.json` (searched dims, nested, subsets, within-group pairs), `baselines.json` → `constant_router` |
+| Sec. 7 | `protocol_check.json`, `repair_results.json` → `leakage_check` |
+| Sec. 8 | `certificate_checks.json` → `label_budget`, `routing_fixed`; `repair_results.json` → `control_flat_classifier` |
+| Conclusion, mode-level signature term | `certificate_checks.json` → `mode_signature` |
+| Detector AUROC (Sec. 3) | `mvtflow/train.py` → `results/detector_metrics.json` (needs the parquet; not shipped) |
 
-| Result | Script | Output |
-|---|---|---|
-| Prevalence prior, balanced recall | `pipeline/baselines.py` | `results/baselines.json` |
-| Tie-break interval on the leave-setting-out splits (paper Sec. 5.2, Fig. 1) | `pipeline/baselines.py` | `results/baselines.json` → `tiebreak_grouped` |
-| Tie-break interval on the full 755-cycle set | `pipeline/baselines.py` | `results/baselines.json` → `tiebreak` |
-| Twin clusters, routes, cluster accuracy, abstention | `pipeline/distinguishability.py` | `results/distinguishability_results.json` |
-| Repair certificates, protocol comparison, two-stage, flat control, granularity ablation, sensitivity | `pipeline/repair.py` | `results/repair_results.json` |
-| Label-budget curve and its 20-split robustness check | `pipeline/repair.py` (`label_curve_vs_control`) | `results/label_budget_curve.json` |
-| Held-out retrieval weights | `pipeline/held_out_eval.py` | `results/held_out_seeds.json` |
-| Instantiation-count sweep, gripping pair (needs the parquet) | `pipeline/synth_power.py` | `results/synth_instantiation_power.json` |
-| Instantiation-count sweep, collision pair | `pipeline/sim_experiments.py --c` | `results/sim_collision_power.json` |
-| Full-chain retrieval over all 755 anomalies (needs the parquet) | `pipeline/integration_test.py` | `results/integration_results.csv` |
-| Detector-gradient cross-check (a negative result) | `pipeline/eval_retrieve.py --gradient` (reads the interface's per-cycle cache `shared/cache/dataset_all.json`, which is not shipped) | `results/gradient_crosscheck.json` |
-| Detector AUROC, AU-PR, TPR / FPR (needs the parquet) | `mvtflow/train.py` | `results/detector_metrics.json` (written on training; not shipped) |
+Other results files: `synth_instantiation_power.json` (`synth_power.py`, needs
+the parquet), `sim_collision_power.json` and `sim_experiments.json`
+(`sim_experiments.py`, a simulated cell that is not a model of the voraus arm),
+`integration_results.csv` (`integration_test.py`), `gradient_crosscheck.json`
+(`eval_retrieve.py --gradient`, which reads an interface cache that is not
+shipped).
 
-Figures are rebuilt from those JSON files:
+---
+
+## Figures and building the paper
 
 ```bash
-python make_figures.py                            # every figure
-python make_figures.py fig_teaser fig_signatures  # only the two the paper uses
+python make_figures.py                                    # every figure
+python make_figures.py fig_tiebreak fig_signatures_column # the two the paper uses
 ```
-
-The six-page paper has room for two figures, so it uses the most important ones
-and merges where it can:
 
 | Paper | File | Contents |
 |---|---|---|
-| Fig. 1 | `figures/fig_teaser.pdf` | tie-break interval and balanced recall, merged into one figure |
-| Fig. 2 | `figures/fig_signatures.pdf` | structural signatures of the 14 failure modes |
+| Fig. 1 | `figures/fig_tiebreak.pdf` | top-1 under all 12 relevant tie-break orders, and group accuracy |
+| Fig. 2 | `figures/fig_signatures_column.pdf` | knowledge-base columns of the modes in the four groups |
 
-The other figures in `figures/` (protocol, certificates, instantiation power,
-granularity, label budget) belong to the long version. Their numbers are in the
-paper's tables and text.
+The other figures in `figures/` belong to the long version.
 
 To build the paper, put IFAC's official `ifacconf.cls` (from the
 [IFAC author guide](https://www.ifac-control.org/conferences/author-guide)) next
@@ -195,55 +170,55 @@ only, not for submission. The committed PDF was built with it: six pages.
 safeprocess2027_final.tex / .pdf   the paper
 make_figures.py    rebuilds figures/ from results/
 pipeline/          the diagnosis pipeline and every evaluation script
-  line_kg.py         FMEA knowledge graph, 14 failure modes, retrieval scoring
-  attribution_bridge.py  numeric anomaly -> structured evidence record
-  distinguishability.py  structural signatures, twin clusters, routes
-  repair.py          feature grammar, certificates, leave-setting-out protocol
-  baselines.py       the trivial references the ranking has to clear
-  synth_faults.py    semi-synthetic fault injection into real normal cycles
-  sim_cell.py        rigid-body cell used only for contact instantiations
+  line_kg.py             FMEA knowledge graph, 14 failure modes, retrieval scoring
+  attribution_bridge.py  raw cycle -> evidence record
+  distinguishability.py  signatures, twin groups, routes
+  repair.py              dimensions, certificates, leave-setting-out protocol
+  baselines.py           prior, tie-break enumeration, balanced recall
+  certificate_checks.py  checks on the load-torque certificate and label budget
+  protocol_check.py      random vs grouped validation for the collision group
+  held_out_eval.py       retrieval weights re-chosen on training halves
+  synth_faults.py        semi-synthetic fault injection into real normal cycles
+  sim_cell.py            simulated cell used only for contact instantiations
 mvtflow/           normalizing-flow detector (needs the parquet to train)
 data/              derived evidence records; see Data above
 results/           every reported number, as JSON
 figures/           vector PDFs, rebuilt by make_figures.py
+tools/             ifacconf_local.cls, a stand-in for IFAC's class
 voraus-AD_data_source_and_licence_record.pdf   provenance and licence record for the dataset
-tools/             ifacconf_local.cls, a stand-in for IFAC's class (see the build note above)
 ```
 
-Not every file in `pipeline/` is used by the analysis above. `kb_console.py`,
-`kb_feedback.py`, `llm_reasoning.py` and `eval_faithfulness.py` belong to a
-separate line of work on the interactive interface and the explanation layer;
-they are kept here so that imports resolve and so the pipeline is not presented
-in a more finished state than it is.
+`kb_console.py`, `kb_feedback.py`, `llm_reasoning.py` and `eval_faithfulness.py`
+belong to separate work on the interactive interface and the explanation layer;
+they are kept so that imports resolve.
 
 ---
 
-## A note on the protocol
+## On the validation protocol
 
-If you use voraus-AD for any learned comparison, **group your splits by
-`setting`**. Each value is one physical fault instantiation repeated 4–20 times,
-so a random split places near-duplicate cycles on both sides. In our case that
-did not merely inflate a number — it reversed which repairs were adopted. The
-effect is invisible without grouping, and permuting labels does not reveal it.
-
-`pipeline/repair.py` implements this as `_grouped_split`, and the inner
-cross-validation of the greedy search is grouped as well.
+For any learned comparison on voraus-AD, group the splits by `setting`, in the
+inner validation as well as the outer split. Each value is one physical fault
+instantiation repeated 4 to 20 times, so a random split puts cycles of the same
+instantiation on both sides. In this study that changed which repair was
+adopted. `pipeline/repair.py` implements the grouped split as `_grouped_split`,
+and the inner cross-validation of the search is grouped as well.
 
 ---
 
-## Limitations worth knowing before you build on this
+## Limitations
 
-- The retrieval stage does not clear a prevalence prior. It should be read as a
-  mechanism for producing candidates with provenance, not as a competitive
-  ranker.
-- Two of the four twin clusters — distal collision and gripping — are never
-  ranked first on any of the 755 cycles, so their certificates are computed over
-  cycles selected by true label rather than by the pipeline's own output.
-- A flat 12-way classifier over the same features reaches `0.525` against the
-  two-stage system's `0.309`, and wins at every label budget above eight.
-- Simulation results support claims about the *protocol* only. Accuracy
-  magnitudes from the simulated cell move with the noise floor and are not
-  properties of real collisions.
+- Every diagnosis number assumes perfect detection: all 755 labelled anomalous
+  cycles are diagnosed.
+- The knowledge base was written by the authors from the voraus-AD anomaly
+  descriptions. The tie count depends on it: declaring axis weight's phase hint
+  as transfer instead of any leaves 315 ties instead of 514.
+- The retrieval does not beat the prevalence prior. It produces candidates with
+  provenance; it is not a competitive ranker.
+- The collision and gripping groups are never ranked first, so their
+  certificates are computed on cycles selected by true label.
+- A flat 12-way classifier over the same features is more accurate than the
+  whole pipeline once more than a few labels are available.
+- Simulated results (`sim_*`) describe the simulated cell only.
 
 ---
 

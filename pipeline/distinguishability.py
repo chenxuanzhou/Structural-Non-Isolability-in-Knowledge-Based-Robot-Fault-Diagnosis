@@ -234,7 +234,7 @@ def _measure():
         margins.append((res["cluster_margin"], ph, ch))
         if res["class_size"] > 1:
             k = frozenset(res["class"])
-            # Property 5.2 only covers ties that ARE a structural-twin group;
+            # the structural argument only covers ties inside a twin group;
             # a numeric tie between unrelated modes is a different animal and
             # must not be reported with the same words.
             tie_kind["structural" if any(k <= g or g <= k for g in twin_ids)
@@ -287,7 +287,7 @@ def _measure():
     # ---- the tie the maths actually covers ----------------------------------
     tot_tie = sum(tie_kind.values())
     print(f"\n  TIE COMPOSITION: {tot_tie} cycles tie at rank 1 — "
-          f"{tie_kind['structural']} are structural twins (Property 5.2 applies), "
+          f"{tie_kind['structural']} are inside structural-twin groups, "
           f"{tie_kind['numeric']} are numeric ties between non-twin modes.\n")
 
     print("=" * 66)

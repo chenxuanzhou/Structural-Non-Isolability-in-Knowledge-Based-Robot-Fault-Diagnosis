@@ -605,8 +605,9 @@ def evaluate(seeds=(0, 1, 2, 3, 4), control=False, protocol="setting", verbose=T
             y_test = np.array([cat_of[i] for i in cl_test])
             groups = np.array([set_of[i] for i in cl_fit]) if protocol == "setting" else None
             if fixed_dims is not None:
-                # deployment variant: one configuration, decided once, applied to
-                # every split -- no per-seed choice of any kind
+                # deployment variant: one configuration applied to every split;
+                # the dims are those most grouped searches chose, so the choice
+                # saw every split (certificate_checks.nested_fixed removes that)
                 Xtr, _ = matrix(cycles, cl_fit, columns, fixed_dims)
                 Xte, _ = matrix(cycles, cl_test, columns, fixed_dims)
                 _, pred = _fit_predict(Xtr, y_fit, Xte)
@@ -875,8 +876,9 @@ def label_curve_vs_control(sizes=(3, 5, 8, 12, 16, 24, 40, 80, 160, 320),
           is what an analyst would do if told where labels are worth most.
           The control still gets k labels spread over all categories.
 
-    Nothing here is tuned; the resolver dims are the fixed shipping
-    configuration so the curve measures labels, not model selection.
+    The resolver dims are the fixed shipping configuration, chosen by the
+    grouped searches and not on these labels, so the curve measures labels
+    rather than model selection.
 
     THREE REFERENCE ARMS, not one.  An earlier version of this curve reported
     only the control and reached a conclusion that does not survive them:
@@ -1420,7 +1422,7 @@ def main():
         cost_spread = {c: sum(r["cost_class"] == c for r in usable)
                        for c in {r["cost_class"] for r in usable}}
         won = adopted >= len(usable) / 2
-        verdict = "ADOPTED" if won else "REJECTED — no repair beat the baselines"
+        verdict = "ADOPTED" if won else "NOT ADOPTED — no repair passed the fit-half rule"
         if won:
             wall = "distinguishability wall — repairable by a representation change"
         elif searched:
@@ -1557,7 +1559,7 @@ def main():
             radopt = sum(r["adopted"] for r in usable) >= len(usable) / 2
             hacc = cert_summary[name]["acc_test"]
             hadopt = cert_summary[name]["adopted"]
-            flag = "  <-- FALSE REPAIR under the leaky protocol" if (radopt and not hadopt) else ""
+            flag = "  <-- adopted only under the random split" if (radopt and not hadopt) else ""
             print(f"    {name:34s} random {racc:.3f} ({'adopt' if radopt else 'reject'})"
                   f"  |  honest {hacc:.3f} ({'adopt' if hadopt else 'reject'}){flag}")
             cl_cmp[name] = {"random": {"acc": racc, "adopted": bool(radopt)},

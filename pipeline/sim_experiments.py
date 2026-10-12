@@ -80,9 +80,11 @@ at BOTH noise floors that flipped A from 100% to 0%. RESULT:
     grouped inner search runs from   N >= 4   (no jitter)
                                      N >= 4   (jitter 2.5 N.m)
 
-The threshold does not move. voraus-AD has THREE carton-collision
-instantiations, so below four the certificate cannot run at all and that
-"inconclusive" was forced by the data -- exactly as the gripping cluster's was.
+The threshold does not move. It follows from the 50/50 grouped split: each
+member keeps floor(N/2) instantiations for training and the grouped inner
+search needs two. voraus-AD has THREE carton-collision instantiations, so under
+that split the search cannot run; with one setting held out at a time it can
+(protocol_check.py).
 
 The adoption verdict, though, still flips between draws all the way to N = 16 at
 both noise floors (0-20% and 20-40%). The collision pair therefore needs MORE
@@ -501,6 +503,35 @@ def experiment_c(verbose=True):
     return {"sweeps": out, "min_instantiations": needs}
 
 
+def cost_class_verdict(b, margin=0.05):
+    """The cheapest cost class whose accuracy is within `margin` of the best.
+
+    Every class is compared with the hardware (temperature) class, so a pair
+    the deployed features already separate is not reported as needing a sensor.
+    """
+    acc = {r["cost_class"]: r["acc_mean"] for r in b}
+    best = max(acc.values())
+    for cls in ("deployed", "free", "pipeline", "hardware"):
+        if cls in acc and acc[cls] >= best - margin:
+            break
+    if cls == "hardware":
+        return ("only the temperature channel separates the simulated pair "
+                f"({acc['hardware']:.3f}); the hardware cost class holds in this cell.")
+    return (f"the {cls} representation already separates the simulated pair "
+            f"({acc[cls]:.3f} against {acc['hardware']:.3f} with temperature), "
+            "so in this cell no added channel is needed.")
+
+
+def rewrite_verdict(path=RESULTS_OUT):
+    """Recompute cost_class_verdict from the stored Experiment B results."""
+    with open(path, encoding="utf-8") as f:
+        payload = json.load(f)
+    payload["cost_class_verdict"] = cost_class_verdict(payload["experiment_b_thermal"])
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+    print("=> " + payload["cost_class_verdict"])
+
+
 def main():
     print("=" * 74)
     print("SIMULATED CELL — two mechanism tests the real dataset cannot run")
@@ -514,22 +545,8 @@ def main():
     print("EXPERIMENT C -- how many collision instantiations for a certificate?")
     c = experiment_c()
 
-    # what the taxonomy claimed vs what the cell shows
-    dep = next(r for r in b if r["cost_class"] == "deployed")
-    pipe = next(r for r in b if r["cost_class"] == "pipeline")
-    hard = next(r for r in b if r["cost_class"] == "hardware")
     print()
-    if pipe["acc_mean"] > dep["acc_mean"] + 0.05 and \
-       hard["acc_mean"] <= pipe["acc_mean"] + 0.05:
-        verdict = ("the unread current channel is ENOUGH -- the twin was "
-                   "classified as needing hardware, but a pipeline change "
-                   "suffices. The cost class was too pessimistic.")
-    elif hard["acc_mean"] > pipe["acc_mean"] + 0.05:
-        verdict = ("temperature is genuinely required: no cheaper "
-                   "representation reaches it, so the HARDWARE cost class holds.")
-    else:
-        verdict = ("no representation separates them in this cell; the pair is "
-                   "undecidable here for reasons other than the missing channel.")
+    verdict = cost_class_verdict(b)
     print("=> " + verdict)
 
     payload = {"note": "simulated cell; mechanism tests only, never pooled with "
@@ -564,5 +581,7 @@ if __name__ == "__main__":
     import sys
     if "--c" in sys.argv:
         main_c_only()
+    elif "--verdict-only" in sys.argv:
+        rewrite_verdict()
     else:
         main()

@@ -282,7 +282,7 @@ def fig_signatures():
         "FM_axisweight": "repaired",
         "FM_collision_card": "inconclusive",
         "FM_misgrip": "undetermined",
-        "FM_miscommutation": "hardware gap",
+        "FM_miscommutation": "untestable",
     }
     row_of = {fid: i for i, fid in enumerate(ordered)}
     for cluster in twins:
@@ -378,7 +378,7 @@ def fig_protocol():
         if adopt is not None:
             r_ad, g_ad = adopt
             txt = ("adopted → adopted" if (r_ad and g_ad)
-                   else "adopted → REJECTED")
+                   else "adopted → not adopted")
             col = INK_2 if (r_ad and g_ad) else CRITICAL
             weight = "normal" if (r_ad and g_ad) else "bold"
             ax.annotate(txt, (1.005, y), xycoords=("axes fraction", "data"),
