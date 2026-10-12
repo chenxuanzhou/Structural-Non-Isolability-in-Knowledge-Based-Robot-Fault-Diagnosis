@@ -110,7 +110,11 @@ sensitivity sweep. This is the longest run of the four.
 cd pipeline && python held_out_eval.py
 ```
 
-Held-out validation of the retrieval weights over five stratified splits.
+Re-tunes the three free weights of the deployed retrieval (evidence, phase,
+coverage) on the fit half of each of the five leave-setting-out splits and
+scores the choice on the held-out half, next to the shipped weights and the
+prevalence prior. The earlier experiment, which tuned an older scorer on
+stratified random splits, is rerun and stored under `legacy`.
 
 The results that need the full dataset are the detector's own AUROC, AU-PR and
 operating point (TPR / FPR), because the detector is trained on raw telemetry
