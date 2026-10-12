@@ -1,55 +1,72 @@
 # -*- coding: utf-8 -*-
-"""Diagnostic distinguishability — the system knows what it cannot know.
+"""Diagnostic distinguishability: which failure modes the deployed retrieval
+cannot tell apart, and how each anomalous cycle is routed as a result.
 
-CORE IDEA (the paper's algorithmic novelty, understandable to anyone):
-A ranked list pretends the top-1 is the answer. But some failure modes are
-*provably indistinguishable UNDER THE DEPLOYED REPRESENTATION* — every term of
-the retrieval score is equal for them, so the ranking can only tie-break
-arbitrarily. This module makes that first-class:
+A ranked list implies that the top-1 entry is the answer. For some failure
+modes the deployed representation gives the ranking nothing to separate them
+with, and the order among them is set by a tie-break. This module finds those
+modes, reports the tie for every cycle, and routes the cycle accordingly.
 
-SCOPE — read this before quoting any number here. "Indistinguishable" is a
-property of (envelope attribution + KB signature), NOT of the sensors and NOT
-of the record. `--probe` and `repair.py` both show the load-torque twins ARE
-separable from the same raw signals once the representation keeps deviation
-DIRECTION and within-cycle STEP: 0.840 held-out over unseen fault
-instantiations. So a twin cluster found here is a REPAIR TARGET, and
-`repair.py` searches for the repair, verifies it, and hands it to an engineer
-to authorize. Only clusters where that search fails (or needs a channel the
-cell lacks) are limits of the sensing itself.
+SCOPE. "Indistinguishable" here is a property of the deployed representation
+(envelope attribution plus the knowledge-base signature). It is not a property
+of the sensors or of the raw record. `--probe` and `repair.py` show that the
+load-torque twins can be separated from the same raw signals once the
+representation keeps the sign of the deviation and the within-cycle step
+(0.840 held-out over unseen fault instantiations). A twin group found here is
+therefore a repair target. Only a group for which the repair search fails, or
+for which the repair needs a channel the cell does not have, is a limit of the
+sensing itself.
 
-  1. It finds the STRUCTURAL TWINS in the knowledge base: failure modes with an
-     identical (affected-joints, manifest-families) signature. From the sensor
-     record alone they are mathematically interchangeable (Property 5.2 in
-     docs/算法与数学表述.md): every evidence/joint/phase/coverage term is equal, so
-     retrieval can only order them by an arbitrary tie-break.
-  2. For each anomaly it returns not just a ranking but the INDISTINGUISHABILITY
-     CLASS at rank 1 (the tied group) and a RESOLVING ACTION — the one thing
-     that would break the tie:
-        · decisive              → a single clear top-1, no ambiguity
-        · human-resolvable      → structural twins; only operator knowledge /
-                                  write-back (or a channel the cell lacks, e.g.
-                                  temperature) can decide
-        · sensor-resolvable     → a discriminating family exists but was not
-                                  observed; name the signal to check
-  3. It reports CLUSTER accuracy: collapse each twin group to one meta-label and
-     ask whether the evidence picked the right *cluster*. This is the honest
-     ceiling of what the sensors can determine, and it is far above the point
-     top-1 — the gap is what the deployed representation cannot decide. Most of
-     it turned out to be repairable, not irreducible (see repair.py).
+What the module does:
 
-This turns a modest point-accuracy (0.163) into an honest statement:
-"the evidence pins the fault CLUSTER with accuracy P; the residual is undecidable
-under the deployed representation, and is either repairable (repair.py finds and
-verifies the missing dimension, an engineer authorizes it) or a genuine sensing
-limit that the human-in-the-loop resolves."
+  1. It finds the structural twins: failure modes with the same affected
+     joints and the same manifest families. For two such modes the joint,
+     family-overlap, evidence and coverage terms of retrieve() are equal on
+     every record. The phase term is not, because it compares the record's
+     phase class with each mode's own phase hint. Twins that also share the
+     hint (the two collisions: transfer; mis-grip and invalid grip: grip;
+     miscommutation and over-temperature: any) get the same score on every
+     record for any setting of the joint, family, evidence, phase and coverage
+     weights, so only the tie-break orders them. (The feedback prior and the
+     signature term are per-mode; both are off by default.) Inside the
+     load-torque group the hints differ: axis weight "any", lost payload
+     "transfer", variable weight "grip". "any" agrees with every phase class,
+     so axis weight scores at least as high as the other two on every record,
+     and the phase class decides which of them ties with it: lost payload in
+     transfer phases, variable weight in pick/place phases, both when the
+     phase class is undefined. With w_phase = 0 all three tie. The results
+     file reports this under kb_columns, tie_composition_sets and
+     phase_sensitivity.
+  2. For each record it returns the ranking, the rank-1 tied set, the score
+     margin between the rank-1 cluster and the best other cluster, and a route:
+        decisive              a single rank-1 mode and a margin >= tau
+        human-resolvable      the rank-1 modes are twins and the margin is
+                              >= tau; operator knowledge, write-back, or a
+                              channel the cell lacks (e.g. temperature) has
+                              to decide between them
+        cluster-undetermined  margin < tau; the action names the signal
+                              families that differ between the rank-1 mode
+                              and the best mode of another cluster
+  3. It reports cluster accuracy: each twin group is merged into one label and
+     the question is whether the rank-1 mode is in the right group. Merging
+     labels raises the chance rate by about as much as the accuracy, so the
+     cluster view shows where the errors are; it does not recover accuracy
+     (see _measure and baselines.py).
 
-Run:  .\\.venv\\Scripts\\python.exe distinguishability.py
+tau = 0.15 (CLUSTER_MARGIN_TAU) was chosen on the same 755 cycles it is
+evaluated on. route_margin_tau() re-chooses it on stratified fit halves and
+scores the choice on the held-out halves.
+
+Run (from pipeline/):  .\\.venv\\Scripts\\python.exe distinguishability.py
+`--probe` additionally needs the voraus-AD parquet.
 """
 from __future__ import annotations
+import inspect
 import os
-from collections import defaultdict
+from collections import Counter, defaultdict
 
-from line_kg import FMEA, FM_SIGNATURE, _expand, retrieve
+from line_kg import (FMEA, FM_SIGNATURE, HINT_PHASE_CLASSES, PHASE_OF_ACTION,
+                     _expand, retrieve)
 
 # channels the cell does not have — a structural-twin tie that would need one of
 # these is a SENSOR GAP, not a human decision (voraus-AD has no temperature)
@@ -110,10 +127,16 @@ def cluster_map(use_signature: bool | None = None):
     return rep
 
 
-# cluster-confidence threshold: below this margin the evidence does not reliably
-# fix the CLUSTER, so we abstain rather than confidently route to a within-cluster
-# decision (the failure mode of replacing point-over-trust with boundary-over-trust).
-# At tau=0.15 the abstention flags cluster errors at 0.82 precision (empirical).
+# Cluster-margin threshold. Below it the evidence does not fix the cluster
+# reliably, so the cycle is routed cluster-undetermined instead of being passed
+# to a within-cluster decision. tau = 0.15 was chosen on the same 755 cycles it
+# is evaluated on. There 0.82 of the abstained cycles have a wrong rank-1
+# cluster, and the abstentions cover 100 of the 498 cluster errors. 151 cycles
+# have a margin of exactly 1/6 (load group vs unstable platform, separated by
+# family overlap alone), so any tau above 1/6 abstains on at least 310 cycles
+# instead of 122.
+# Choosing tau on 200 stratified fit halves gives held-out precision 0.80
+# (route_margin_tau in the results file).
 CLUSTER_MARGIN_TAU = 0.15
 
 
@@ -163,6 +186,12 @@ def resolve(record, retrieve_fn=retrieve, eps=1e-6, tau=CLUSTER_MARGIN_TAU, top_
 
 
 # ---------------------------------------------------------------- measurement
+# voraus-AD category -> short name used as a key in the results file
+CATN = {0: "friction", 1: "axisweight", 2: "coll_foam", 3: "coll_cable", 4: "coll_card",
+        5: "misgrip", 6: "losecan", 7: "varweight", 8: "entangled", 9: "invalidgrip",
+        10: "commut", 11: "platform"}
+
+
 def _measure():
     import json
     from eval_retrieve import load_cache
@@ -278,9 +307,6 @@ def _measure():
     print("     where a category inside the majority cluster has a constant baseline")
     print("     of 1.000, not of its cluster-random rate.\n")
     print("  per-category cluster accuracy, normalized by its own cluster-random:")
-    CATN = {0: "friction", 1: "axisweight", 2: "coll_foam", 3: "coll_cable", 4: "coll_card",
-            5: "misgrip", 6: "losecan", 7: "varweight", 8: "entangled", 9: "invalidgrip",
-            10: "commut", 11: "platform"}
     for cat in sorted(per):
         nn, hh, cr = per[cat]
         acc = hh / nn
@@ -315,9 +341,10 @@ def _measure():
         if len(shown) >= 2:
             break
 
+    extra = revision_checks(recs)
     out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                        "results", "distinguishability_results.json")
-    with open(out, "w", encoding="utf-8") as f:
+    with open(out, "w", encoding="utf-8", newline="\r\n") as f:
         json.dump({"n": n,
                    "point_top1": point_hit/n, "point_random": pt_rand,
                    "point_lift": point_hit/n/pt_rand,
@@ -334,8 +361,368 @@ def _measure():
                    "risk_coverage": rc,
                    "tau": CLUSTER_MARGIN_TAU, "tau_coverage": tau_cov,
                    "tie_composition": dict(tie_kind),
-                   "twin_clusters": [sorted(g) for g in twins]}, f, indent=2, ensure_ascii=False)
+                   "twin_clusters": [sorted(g) for g in twins],
+                   **extra}, f, indent=2, ensure_ascii=False)
     print(f"written -> {out}")
+
+
+# ---------------------------------------------------------------- revision checks
+# Offline checks on the cached records (data/records_cache.json; no parquet).
+# _measure() writes each result under its own key in the results file.
+TIE_EPS = 1e-6                                # same tolerance as resolve()
+W_PHASE_DEPLOYED = inspect.signature(retrieve).parameters["w_phase"].default
+PHASE_WEIGHTS = (0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 3.0)
+SPLIT_SEEDS = (0, 1, 2, 3, 4)                 # leave-setting-out splits of Table 1
+TAU_GRID = (0.05, 0.10, 0.15, 0.16, 0.17, 0.20, 0.25)
+TAU_SPLITS = 200                              # stratified 50/50 splits, seeds 0..199
+TAU_MIN_COVERAGE = 0.80                       # selection rule, see route_margin_tau()
+COLLISION_CATS = (2, 3, 4)
+GRIPPING_CATS = (5, 9)                        # mis-grip and invalid grip (a twin pair)
+
+
+def _phase_class(rec):
+    """The phase class retrieve() compares with each mode's phase hint
+    (None for VOID_* segments; no mode gets the phase term then)."""
+    return PHASE_OF_ACTION.get(rec["localization"].get("dominant_cycle_phase"))
+
+
+def _tied_ids(cands, eps=TIE_EPS):
+    top = cands[0]["score"]
+    return [c["id"] for c in cands if abs(c["score"] - top) <= eps]
+
+
+def _set_key(ids):
+    return "+".join(sorted(ids))
+
+
+def _counts(counter):
+    return {str(k): int(v) for k, v in counter.most_common()}
+
+
+def _context(recs):
+    """Records keyed by cycle id (sorted as in repair.py), labels, and the
+    deployed ranking of every record."""
+    from integration_test import CATEGORY_TO_FM
+    by_id = {str(r["cycle_id"]): r for r in recs}
+    ids = sorted(by_id, key=int)
+    cat_of = {i: by_id[i]["detector"]["ground_truth_category"] for i in ids}
+    return dict(recs=by_id, ids=ids, cat_of=cat_of,
+                set_of={i: by_id[i]["detector"]["ground_truth_setting"] for i in ids},
+                true_fm={i: CATEGORY_TO_FM[cat_of[i]] for i in ids},
+                rep=cluster_map(),
+                ranked={i: retrieve(by_id[i], top_k=len(FMEA)) for i in ids})
+
+
+def tie_sets(ctx):
+    """Rank-1 tied sets by composition at the deployed weights, with the
+    record's phase class and the true category behind each set."""
+    rows = defaultdict(lambda: {"n": 0, "phase": Counter(), "cat": Counter(), "hit": 0})
+    for i in ctx["ids"]:
+        t = _tied_ids(ctx["ranked"][i])
+        if len(t) < 2:
+            continue
+        d = rows[_set_key(t)]
+        d["n"] += 1
+        d["phase"][_phase_class(ctx["recs"][i]) or "undefined"] += 1
+        d["cat"][CATN[ctx["cat_of"][i]]] += 1
+        d["hit"] += ctx["true_fm"][i] in t
+    sets = {k: {"n": d["n"], "phase_class": _counts(d["phase"]),
+                "true_category": _counts(d["cat"]), "true_mode_in_set": d["hit"]}
+            for k, d in sorted(rows.items(), key=lambda kv: -kv[1]["n"])}
+    return {"n_cycles": len(ctx["ids"]),
+            "n_tied": sum(d["n"] for d in sets.values()),
+            "phase_class_rule": "line_kg.PHASE_OF_ACTION[dominant_cycle_phase]; "
+                                "'undefined' is a VOID_* segment, where no mode "
+                                "gets the phase term",
+            "sets": sets}
+
+
+def phase_sensitivity(ctx, weights=PHASE_WEIGHTS, seeds=SPLIT_SEEDS):
+    """Rank-1 ties, their composition and the tied-set oracle as w_phase varies
+    (all other weights at their defaults). The oracle is the share of cycles
+    whose true mode is in the rank-1 tied set."""
+    import numpy as np
+    import repair as R
+    ids, rep, true_fm = ctx["ids"], ctx["rep"], ctx["true_fm"]
+    tests = [R._grouped_split(ids, ctx["cat_of"], ctx["set_of"], s)[1] for s in seeds]
+    by_w = {}
+    for w in weights:
+        comp, lost, hit = Counter(), Counter(), {}
+        point = clus = 0
+        for i in ids:
+            c = retrieve(ctx["recs"][i], top_k=len(FMEA), w_phase=w)
+            t = _tied_ids(c)
+            if len(t) > 1:
+                comp[_set_key(t)] += 1
+            hit[i] = true_fm[i] in t
+            point += c[0]["id"] == true_fm[i]
+            in_group = rep[c[0]["id"]] == rep[true_fm[i]]
+            clus += in_group
+            if in_group and not hit[i]:
+                lost[CATN[ctx["cat_of"][i]]] += 1
+        per_split = [float(np.mean([hit[i] for i in test])) for test in tests]
+        by_w[str(w)] = {
+            "n_tied": sum(comp.values()), "composition": _counts(comp),
+            "point_top1": point / len(ids), "cluster_top1": clus / len(ids),
+            "oracle_all": sum(hit.values()) / len(ids),
+            "oracle_grouped_mean": float(np.mean(per_split)),
+            "oracle_grouped_per_split": per_split,
+            "true_in_group_not_in_tied": sum(lost.values()),
+            "true_in_group_not_in_tied_by_category": _counts(lost)}
+    on, off = by_w[str(W_PHASE_DEPLOYED)], by_w[str(0.0)]
+    return {"w_phase_deployed": W_PHASE_DEPLOYED, "weights": list(weights),
+            "grouped_split": "repair._grouped_split (leave-setting-out), held-out half, "
+                             "mean over seeds",
+            "split_seeds": list(seeds), "n_test": [len(t) for t in tests],
+            "oracle_all_with_phase": on["oracle_all"],
+            "oracle_all_without_phase": off["oracle_all"],
+            "oracle_grouped_with_phase": on["oracle_grouped_mean"],
+            "oracle_grouped_without_phase": off["oracle_grouped_mean"],
+            "true_in_group_not_in_tied": on["true_in_group_not_in_tied"],
+            "group_definition": "the twin group (cluster_map) of the rank-1 mode",
+            "by_w_phase": by_w}
+
+
+def kb_columns(ctx):
+    """Each mode's column (scope, manifest families, phase hint), the pairs with
+    the same (joints, families), and the strict inclusions between columns."""
+    order = [fm["id"] for fm in FMEA]
+    fm_of = {fm["id"]: fm for fm in FMEA}
+    col = {f: (frozenset(_expand(fm_of[f]["affects"])), frozenset(fm_of[f]["manifests"]))
+           for f in order}
+    hint = {f: fm_of[f]["phase_hint"] for f in order}
+    # phase classes that earn the phase term (None never does in retrieve())
+    agree = {f: HINT_PHASE_CLASSES.get(hint[f], set()) - {None} for f in order}
+    scores = {i: {c["id"]: c["score"] for c in ctx["ranked"][i]} for i in ctx["ids"]}
+
+    def relation(a, b):
+        if agree[a] == agree[b]:
+            return "same"
+        if agree[a] > agree[b]:
+            return f"{a} covers {b}"
+        if agree[b] > agree[a]:
+            return f"{b} covers {a}"
+        return "overlap" if agree[a] & agree[b] else "disjoint"
+
+    equal, inclusions = [], []
+    for x, a in enumerate(order):
+        for b in order[x + 1:]:
+            if col[a] != col[b]:
+                continue
+            d = [scores[i][a] - scores[i][b] for i in ctx["ids"]]
+            equal.append({"modes": [a, b], "phase_hints": [hint[a], hint[b]],
+                          "same_phase_hint": hint[a] == hint[b],
+                          "phase_relation": relation(a, b),
+                          "n_first_higher": sum(v > TIE_EPS for v in d),
+                          "n_equal": sum(abs(v) <= TIE_EPS for v in d),
+                          "n_second_higher": sum(v < -TIE_EPS for v in d)})
+    for a in order:
+        for b in order:
+            if a != b and col[a] != col[b] and col[a][0] <= col[b][0] and col[a][1] <= col[b][1]:
+                inclusions.append({"inner": a, "outer": b,
+                                   "phase_hints": [hint[a], hint[b]],
+                                   "outer_phase_covers_inner": agree[b] >= agree[a]})
+    return {"column": "scope expanded to a joint set, manifest families, phase hint",
+            "modes": {f: {"scope": fm_of[f]["affects"], "joints": sorted(col[f][0]),
+                          "families": sorted(col[f][1]), "phase_hint": hint[f]}
+                      for f in order},
+            "n_equal_pairs": len(equal),
+            "n_equal_pairs_same_phase_hint": sum(p["same_phase_hint"] for p in equal),
+            "equal_pairs": equal,
+            "n_strict_inclusions": len(inclusions),
+            "strict_inclusions": inclusions,
+            "pair_scores_over": f"{len(ctx['ids'])} records, deployed weights"}
+
+
+def localization(ctx):
+    """Where the record localizes, whether a distal-scoped mode ever earns the
+    joint term, and the rank of the true mode."""
+    import numpy as np
+    from line_kg import JOINTS, DISTAL_JOINTS
+    recs, ids = ctx["recs"], ctx["ids"]
+    dom = Counter(recs[i]["localization"]["dominant_joint"] for i in ids)
+    top_z = Counter(recs[i]["localization"]["joint_ranking_by_z"][0]["joint"]
+                    for i in ids if recs[i]["localization"]["joint_ranking_by_z"])
+    distal = [fm["id"] for fm in FMEA if fm["affects"] == "distal"]
+    jm = {f: sum(next(c for c in ctx["ranked"][i] if c["id"] == f)["provenance"]["joint_match"]
+                 for i in ids) for f in distal}
+    rank, best = defaultdict(list), defaultdict(list)
+    for i in ids:
+        c, tf, cat = ctx["ranked"][i], ctx["true_fm"][i], ctx["cat_of"][i]
+        s = next(x["score"] for x in c if x["id"] == tf)
+        rank[cat].append([x["id"] for x in c].index(tf) + 1)
+        best[cat].append(1 + sum(x["score"] > s + TIE_EPS for x in c))
+
+    def summary(cats):
+        r = [v for k in cats for v in rank[k]]
+        b = [v for k in cats for v in best[k]]
+        return {"n": len(r), "median_rank": float(np.median(r)),
+                "median_best_rank": float(np.median(b))}
+
+    return {"dominant_joint": {str(j): dom.get(j, 0) for j in JOINTS},
+            "dominant_joint_rule": "joint with the largest absolute peak torque deviation "
+                                   "(attribution_bridge.to_bridge_record)",
+            "dominant_joint_distal": sum(dom.get(j, 0) for j in DISTAL_JOINTS),
+            "top_joint_by_z": {str(j): top_z.get(j, 0) for j in JOINTS},
+            "distal_modes": distal,
+            "distal_joint_match": jm,
+            "distal_joint_match_total": sum(jm.values()),
+            "rank_rule": "median_rank: position in retrieve()'s order (ties in declaration "
+                         "order); median_best_rank: 1 + modes scoring strictly higher",
+            "collision": {"categories": [CATN[k] for k in COLLISION_CATS],
+                          **summary(COLLISION_CATS)},
+            "gripping": {"categories": [CATN[k] for k in GRIPPING_CATS],
+                         **summary(GRIPPING_CATS)},
+            "per_category": {CATN[k]: summary((k,)) for k in sorted(rank)}}
+
+
+def route_margin_tau(ctx, grid=TAU_GRID, n_splits=TAU_SPLITS, min_cov=TAU_MIN_COVERAGE):
+    """The cluster margin of resolve(): a tau scan, the mass point at 1/6, the
+    margin's AUROC for cluster correctness, and tau re-chosen on fit halves.
+
+    Selection rule, applied on the fit half only: keep the scanned taus that
+    still route at least `min_cov` of the fit cycles (abstention stays a reject
+    option for a minority of cycles, as the comment at CLUSTER_MARGIN_TAU
+    describes; the shipped 0.15 routes 0.838 of all cycles), then take the one
+    with the highest abstention precision, the share of abstained cycles whose
+    rank-1 cluster is wrong. Ties go to the smaller tau. The chosen tau is
+    scored on the test half of the same split.
+    """
+    import numpy as np
+    import repair as R
+    from sklearn.metrics import roc_auc_score
+    ids, rep = ctx["ids"], ctx["rep"]
+    margin, ok, res_of = {}, {}, {}
+    for i in ids:
+        res = resolve(ctx["recs"][i])
+        res_of[i] = res
+        margin[i] = res["cluster_margin"]
+        ok[i] = rep[res["ranked"][0]["id"]] == rep[ctx["true_fm"][i]]
+
+    def stats(sub, tau):
+        ab = [i for i in sub if margin[i] < tau]
+        ac = [i for i in sub if margin[i] >= tau]
+        wrong = sum(not ok[i] for i in ab)
+        n_wrong = sum(not ok[i] for i in sub)
+        return {"tau": tau, "n": len(sub), "n_abstained": len(ab),
+                "coverage": len(ac) / len(sub),
+                "cluster_acc_accepted": float(np.mean([ok[i] for i in ac])) if ac else None,
+                "cluster_acc_abstained": float(np.mean([ok[i] for i in ab])) if ab else None,
+                "abstention_precision": wrong / len(ab) if ab else None,
+                "n_wrong_abstained": wrong,
+                "share_of_errors_abstained": wrong / n_wrong if n_wrong else None}
+
+    # the mass point: margin exactly 1/6 (scores are rounded to 4 decimals)
+    sixth = [i for i in ids if margin[i] == round(1 / 6, 4)]
+    pair, fams, no_ev = Counter(), Counter(), 0
+    for i in sixth:
+        c = res_of[i]["ranked"]
+        other = next(x for x in c if rep[x["id"]] != rep[c[0]["id"]])
+        pair[f"{rep[c[0]['id']]} cluster vs {other['id']}"] += 1
+        fams[_set_key({s["family"] for s in ctx["recs"][i]["attributed_signals"]})] += 1
+        no_ev += not (c[0]["provenance"]["evidence_signals"]
+                      or other["provenance"]["evidence_signals"])
+
+    chosen, te_prec, te_cov, fit_prec, fixed = Counter(), [], [], [], []
+    for seed in range(n_splits):
+        fit, test = R._stratified_split(ids, ctx["cat_of"], seed)
+        cand = [stats(fit, t) for t in grid]
+        feas = [s for s in cand if s["coverage"] >= min_cov and s["n_abstained"]] or cand[:1]
+        pick = max(feas, key=lambda s: (s["abstention_precision"], -s["tau"]))
+        te = stats(test, pick["tau"])
+        chosen[pick["tau"]] += 1
+        fit_prec.append(pick["abstention_precision"])
+        te_prec.append(te["abstention_precision"])
+        te_cov.append(te["coverage"])
+        fixed.append(stats(test, CLUSTER_MARGIN_TAU)["abstention_precision"])
+
+    def pct(v):
+        lo, hi = np.percentile(v, [2.5, 97.5])
+        return float(lo), float(hi)
+
+    shipped = stats(ids, CLUSTER_MARGIN_TAU)
+    return {
+        "tau": CLUSTER_MARGIN_TAU,
+        "tau_chosen_on": f"the same {len(ids)} cycles it is evaluated on (in-sample)",
+        "margin_definition": "rank-1 score minus the best score of a mode outside "
+                             "the rank-1 cluster (resolve(), rounded to 4 decimals)",
+        "in_sample": shipped,
+        "scan": [stats(ids, t) for t in grid],
+        "n_margin_one_sixth": len(sixth),
+        "one_sixth_rule": "cluster_margin == round(1/6, 4) == 0.1667",
+        "n_margin_within_5e-4_of_one_sixth": sum(abs(margin[i] - 1 / 6) <= 5e-4 for i in ids),
+        "one_sixth_pairs": _counts(pair),
+        "one_sixth_record_families": _counts(fams),
+        "one_sixth_no_joint_gated_evidence": no_ev,
+        "one_sixth_cluster_acc": float(np.mean([ok[i] for i in sixth])) if sixth else None,
+        "auroc_margin_vs_cluster_correct": float(roc_auc_score(
+            [int(ok[i]) for i in ids], [margin[i] for i in ids])),
+        "fit_half_selection": {
+            "splits": f"repair._stratified_split, seeds 0-{n_splits - 1}",
+            "candidates": list(grid),
+            "rule": f"on the fit half keep taus with coverage >= {min_cov} and at "
+                    "least one abstention; take the highest abstention precision; "
+                    "ties to the smaller tau; score it on the test half",
+            "min_coverage": min_cov,
+            "chosen_tau_counts": {str(k): v for k, v in sorted(chosen.items())},
+            "fit_precision_mean": float(np.mean(fit_prec)),
+            "heldout_precision_mean": float(np.mean(te_prec)),
+            "heldout_precision_p2_5": pct(te_prec)[0],
+            "heldout_precision_p97_5": pct(te_prec)[1],
+            "heldout_coverage_mean": float(np.mean(te_cov)),
+            "shipped_tau_heldout_precision_mean": float(np.mean(fixed)),
+            "shipped_tau_heldout_precision_p2_5": pct(fixed)[0],
+            "shipped_tau_heldout_precision_p97_5": pct(fixed)[1],
+            "in_sample_precision_shipped_tau": shipped["abstention_precision"]},
+    }
+
+
+def revision_checks(recs, verbose=True):
+    """Run the checks above; keys are the ones written to the results file."""
+    ctx = _context(recs)
+    out = {"tie_composition_sets": tie_sets(ctx),
+           "phase_sensitivity": phase_sensitivity(ctx),
+           "kb_columns": kb_columns(ctx),
+           "localization": localization(ctx),
+           "route_margin_tau": route_margin_tau(ctx)}
+    if not verbose:
+        return out
+    ts, ps, kc = out["tie_composition_sets"], out["phase_sensitivity"], out["kb_columns"]
+    lo, rt = out["localization"], out["route_margin_tau"]
+    print("=" * 66)
+    print("REVISION CHECKS (records cache only)")
+    print("=" * 66)
+    print(f"  rank-1 tied sets ({ts['n_tied']} of {ts['n_cycles']}):")
+    for k, d in ts["sets"].items():
+        print(f"    {d['n']:>4}  {k}  phase {d['phase_class']}  true {d['true_category']}")
+    print("  phase weight sweep (n tied / oracle all / oracle grouped / cluster top-1):")
+    for w, d in ps["by_w_phase"].items():
+        print(f"    w_phase {w:>4}: {d['n_tied']:>4}  {d['oracle_all']:.3f}  "
+              f"{d['oracle_grouped_mean']:.3f}  {d['cluster_top1']:.3f}  {d['composition']}")
+    print(f"  true mode in the rank-1 group but not in the tied set "
+          f"(w_phase {ps['w_phase_deployed']}): {ps['true_in_group_not_in_tied']}")
+    print(f"  KB columns: {kc['n_equal_pairs']} equal (joints, families) pairs, "
+          f"{kc['n_equal_pairs_same_phase_hint']} of them with the same phase hint; "
+          f"{kc['n_strict_inclusions']} strict inclusions")
+    for p in kc["equal_pairs"]:
+        print(f"    {p['modes']}  hints {p['phase_hints']}  {p['phase_relation']}")
+    print(f"  dominant joint {lo['dominant_joint']}; distal-scoped joint matches "
+          f"{lo['distal_joint_match_total']}")
+    print(f"  median true-mode rank: collision {lo['collision']['median_rank']}, "
+          f"gripping {lo['gripping']['median_rank']}")
+    print(f"  cluster margin: {rt['n_margin_one_sixth']} cycles at exactly 1/6, "
+          f"AUROC {rt['auroc_margin_vs_cluster_correct']:.3f}")
+    for s in rt["scan"]:
+        print(f"    tau {s['tau']:.2f}: abstain {s['n_abstained']:>3}  "
+              f"acc accepted {s['cluster_acc_accepted']:.3f}  "
+              f"acc abstained {s['cluster_acc_abstained']:.3f}  "
+              f"precision {s['abstention_precision']:.3f}")
+    fs = rt["fit_half_selection"]
+    print(f"  tau chosen on fit halves {fs['chosen_tau_counts']}: held-out precision "
+          f"{fs['heldout_precision_mean']:.3f} [{fs['heldout_precision_p2_5']:.3f}, "
+          f"{fs['heldout_precision_p97_5']:.3f}] vs in-sample "
+          f"{fs['in_sample_precision_shipped_tau']:.3f}\n")
+    return out
 
 
 def separability_probe():
