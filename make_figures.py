@@ -119,10 +119,10 @@ def fig_tiebreak():
     ex = b["tiebreak_exact"]
     pr = b["prior_vs_retrieval"]
     sv = b["set_valued"]
-    orders = sorted(v for v in ex["per_order_mean"].values())
-    decl = ex["declaration_mean"]
+    orders = sorted(o["top1_mean"] for o in ex["per_order"])
+    decl = ex["declaration_order"]
 
-    fig, ax = plt.subplots(figsize=(3.35, 1.55))
+    fig, ax = plt.subplots(figsize=(3.35, 1.2))
     y_pt, y_cl = 1.0, 0.0
     lo, hi = ex["exact_min"], ex["exact_max"]
     ax.add_patch(Rectangle((lo, y_pt - 0.11), hi - lo, 0.22,
@@ -138,25 +138,19 @@ def fig_tiebreak():
 
     ax.plot(pr["cluster_retrieval"], y_cl, "o", ms=5.5, color=BLUE, mec="white",
             mew=0.8, zorder=4)
-    ax.plot(sv["constant_group_accuracy"], y_cl, "s", ms=5, mfc="white",
+    ax.plot(sv["constant_group"]["coverage"], y_cl, "s", ms=5, mfc="white",
             mec=CRITICAL, mew=1.2, zorder=5)
 
     ax.set_yticks([y_pt, y_cl])
     ax.set_yticklabels(["failure mode\n(top-1)", "group"])
     ax.tick_params(axis="y", length=0)
     ax.set_xlim(0.10, 0.43)
-    ax.set_ylim(-0.45, 1.55)
+    ax.set_ylim(-0.45, 1.6)
     ax.set_xticks([0.1, 0.2, 0.3, 0.4])
     ax.set_xlabel("accuracy (mean of five leave-setting-out splits)")
     tidy(ax, xgrid=True)
     ax.spines["left"].set_visible(False)
 
-    ax.plot([], [], "o", ms=5, color=BLUE, label="declaration order")
-    ax.plot([], [], "D", ms=4, color=INK, label="mean over orders")
-    ax.plot([], [], "s", ms=4.5, mfc="white", mec=CRITICAL, mew=1.2,
-            label="prevalence prior")
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.42), ncol=3,
-              fontsize=6.6, handletextpad=0.3, columnspacing=0.9)
     save(fig, "fig_tiebreak.pdf")
 
 
@@ -199,7 +193,7 @@ def fig_signatures_column():
 def _signatures_column(fmea, rows, cols, col_labels, on):
     import distinguishability as D
 
-    fig, ax = plt.subplots(figsize=(3.35, 2.05))
+    fig, ax = plt.subplots(figsize=(3.35, 1.8))
     for r, (fid, _) in enumerate(rows):
         for c, (kind, v) in enumerate(cols):
             ax.add_patch(Rectangle(
