@@ -178,5 +178,758 @@
   "cluster_invariant": true,
   "cluster_invariant_over": "203 orderings x 5 splits"
  },
+ "tiebreak_exact": {
+  "protocol": "leave-setting-out, five splits, held-out half; same splits as Table 1",
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "n_cycles": 755,
+  "n_rank1_tied": 514,
+  "cross_group_ties": 0,
+  "tie_components": [
+   [
+    "FM_losecan",
+    "FM_axisweight",
+    "FM_varweight"
+   ],
+   [
+    "FM_miscommutation",
+    "FM_overtemp"
+   ]
+  ],
+  "n_relative_orders": 12,
+  "n_distinct_means": 10,
+  "exact_min": 0.1186247255271499,
+  "exact_max": 0.2003280791649856,
+  "exact_mean": 0.15953080485488821,
+  "exact_sd_population": 0.027400286546980623,
+  "per_order": [
+   {
+    "order": "FM_losecan > FM_axisweight > FM_varweight; FM_miscommutation > FM_overtemp",
+    "top1_mean": 0.16914497154929936,
+    "top1_per_split": [
+     0.16414141414141414,
+     0.1683673469387755,
+     0.15217391304347827,
+     0.19230769230769232,
+     0.1687344913151365
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_losecan > FM_axisweight > FM_varweight; FM_overtemp > FM_miscommutation",
+    "top1_mean": 0.15442997306351341,
+    "top1_per_split": [
+     0.14898989898989898,
+     0.15306122448979592,
+     0.13768115942028986,
+     0.17857142857142858,
+     0.15384615384615385
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_losecan > FM_varweight > FM_axisweight; FM_miscommutation > FM_overtemp",
+    "top1_mean": 0.13961871128270648,
+    "top1_per_split": [
+     0.14393939393939395,
+     0.14540816326530612,
+     0.11594202898550725,
+     0.15384615384615385,
+     0.13895781637717122
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_losecan > FM_varweight > FM_axisweight; FM_overtemp > FM_miscommutation",
+    "top1_mean": 0.12490371279692059,
+    "top1_per_split": [
+     0.12878787878787878,
+     0.13010204081632654,
+     0.10144927536231885,
+     0.1401098901098901,
+     0.12406947890818859
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_axisweight > FM_losecan > FM_varweight; FM_miscommutation > FM_overtemp",
+    "top1_mean": 0.2003280791649856,
+    "top1_per_split": [
+     0.1919191919191919,
+     0.2066326530612245,
+     0.20048309178743962,
+     0.21153846153846154,
+     0.19106699751861042
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_axisweight > FM_losecan > FM_varweight; FM_overtemp > FM_miscommutation",
+    "top1_mean": 0.18561308067919968,
+    "top1_per_split": [
+     0.17676767676767677,
+     0.1913265306122449,
+     0.1859903381642512,
+     0.1978021978021978,
+     0.1761786600496278
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_axisweight > FM_varweight > FM_losecan; FM_miscommutation > FM_overtemp",
+    "top1_mean": 0.2003280791649856,
+    "top1_per_split": [
+     0.1919191919191919,
+     0.2066326530612245,
+     0.20048309178743962,
+     0.21153846153846154,
+     0.19106699751861042
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_axisweight > FM_varweight > FM_losecan; FM_overtemp > FM_miscommutation",
+    "top1_mean": 0.18561308067919968,
+    "top1_per_split": [
+     0.17676767676767677,
+     0.1913265306122449,
+     0.1859903381642512,
+     0.1978021978021978,
+     0.1761786600496278
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_varweight > FM_losecan > FM_axisweight; FM_miscommutation > FM_overtemp",
+    "top1_mean": 0.13333972401293578,
+    "top1_per_split": [
+     0.13131313131313133,
+     0.14285714285714285,
+     0.11594202898550725,
+     0.1401098901098901,
+     0.13647642679900746
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_varweight > FM_losecan > FM_axisweight; FM_overtemp > FM_miscommutation",
+    "top1_mean": 0.1186247255271499,
+    "top1_per_split": [
+     0.11616161616161616,
+     0.12755102040816327,
+     0.10144927536231885,
+     0.12637362637362637,
+     0.12158808933002481
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_varweight > FM_axisweight > FM_losecan; FM_miscommutation > FM_overtemp",
+    "top1_mean": 0.15857025941177413,
+    "top1_per_split": [
+     0.16414141414141414,
+     0.17857142857142858,
+     0.14492753623188406,
+     0.15384615384615385,
+     0.1513647642679901
+    ],
+    "cluster_top1": 0.34244700233980935
+   },
+   {
+    "order": "FM_varweight > FM_axisweight > FM_losecan; FM_overtemp > FM_miscommutation",
+    "top1_mean": 0.14385526092598827,
+    "top1_per_split": [
+     0.14898989898989898,
+     0.16326530612244897,
+     0.13043478260869565,
+     0.1401098901098901,
+     0.13647642679900746
+    ],
+    "cluster_top1": 0.34244700233980935
+   }
+  ],
+  "declaration_order": 0.16914497154929936,
+  "declaration_per_split": [
+   0.16414141414141414,
+   0.1683673469387755,
+   0.15217391304347827,
+   0.19230769230769232,
+   0.1687344913151365
+  ],
+  "declaration_se": 0.006520495535351681,
+  "declaration_split_range": 0.04013377926421405,
+  "prior_top1": 0.18669464787978113,
+  "n_orders_at_or_above_prior": 2,
+  "cluster_top1": 0.34244700233980935,
+  "cluster_invariant": true,
+  "tie_aware_top1": {
+   "per_split": [
+    0.156986531986532,
+    0.16709183673469388,
+    0.14774557165861513,
+    0.17032967032967034,
+    0.15550041356492972
+   ],
+   "mean": 0.15953080485488821
+  },
+  "note": "Orders are written component by component, first-listed mode wins a tie; modes outside the components keep declaration order. The first order is the declaration order. exact_sd_population is the population s.d. over the orders. tie_aware_top1 gives 1/|T| credit per tied member of the true category and equals exact_mean, because over all orders each member of a tied set comes first equally often. Cluster top-1 is the same under every order because no rank-1 tied set contains modes of two groups."
+ },
+ "tie_robust": {
+  "n_relative_orders": 12,
+  "per_order": [
+   {
+    "order": "FM_losecan > FM_axisweight > FM_varweight; FM_miscommutation > FM_overtemp",
+    "top1": 0.16914497154929936,
+    "top3": 0.42323752128901393,
+    "top5": 0.6509771762777172,
+    "mrr": 0.3656375683339515
+   },
+   {
+    "order": "FM_losecan > FM_axisweight > FM_varweight; FM_overtemp > FM_miscommutation",
+    "top1": 0.15442997306351341,
+    "top3": 0.42323752128901393,
+    "top5": 0.6396748635277988,
+    "mrr": 0.35518938335437533
+   },
+   {
+    "order": "FM_losecan > FM_varweight > FM_axisweight; FM_miscommutation > FM_overtemp",
+    "top1": 0.13961871128270648,
+    "top3": 0.4059472340478151,
+    "top5": 0.6509771762777172,
+    "mrr": 0.34598565584718666
+   },
+   {
+    "order": "FM_losecan > FM_varweight > FM_axisweight; FM_overtemp > FM_miscommutation",
+    "top1": 0.12490371279692059,
+    "top3": 0.4059472340478151,
+    "top5": 0.6396748635277988,
+    "mrr": 0.33553747086761027
+   },
+   {
+    "order": "FM_axisweight > FM_losecan > FM_varweight; FM_miscommutation > FM_overtemp",
+    "top1": 0.2003280791649856,
+    "top3": 0.42323752128901393,
+    "top5": 0.6509771762777172,
+    "mrr": 0.38439302077052984
+   },
+   {
+    "order": "FM_axisweight > FM_losecan > FM_varweight; FM_overtemp > FM_miscommutation",
+    "top1": 0.18561308067919968,
+    "top3": 0.42323752128901393,
+    "top5": 0.6396748635277988,
+    "mrr": 0.3739448357909538
+   },
+   {
+    "order": "FM_axisweight > FM_varweight > FM_losecan; FM_miscommutation > FM_overtemp",
+    "top1": 0.2003280791649856,
+    "top3": 0.42166068197925544,
+    "top5": 0.6509771762777172,
+    "mrr": 0.3832151196164214
+   },
+   {
+    "order": "FM_axisweight > FM_varweight > FM_losecan; FM_overtemp > FM_miscommutation",
+    "top1": 0.18561308067919968,
+    "top3": 0.42166068197925544,
+    "top5": 0.6396748635277988,
+    "mrr": 0.37276693463684546
+   },
+   {
+    "order": "FM_varweight > FM_losecan > FM_axisweight; FM_miscommutation > FM_overtemp",
+    "top1": 0.13333972401293578,
+    "top3": 0.4059472340478151,
+    "top5": 0.6509771762777172,
+    "mrr": 0.3425833556606749
+   },
+   {
+    "order": "FM_varweight > FM_losecan > FM_axisweight; FM_overtemp > FM_miscommutation",
+    "top1": 0.1186247255271499,
+    "top3": 0.4059472340478151,
+    "top5": 0.6396748635277988,
+    "mrr": 0.33213517068109843
+   },
+   {
+    "order": "FM_varweight > FM_axisweight > FM_losecan; FM_miscommutation > FM_overtemp",
+    "top1": 0.15857025941177413,
+    "top3": 0.4098884635700905,
+    "top5": 0.6509771762777172,
+    "mrr": 0.3590261815647807
+   },
+   {
+    "order": "FM_varweight > FM_axisweight > FM_losecan; FM_overtemp > FM_miscommutation",
+    "top1": 0.14385526092598827,
+    "top3": 0.4098884635700905,
+    "top5": 0.6396748635277988,
+    "mrr": 0.3485779965852045
+   }
+  ],
+  "range_over_orders": {
+   "top1": {
+    "min": 0.1186247255271499,
+    "max": 0.2003280791649856,
+    "prior": 0.18669464787978113,
+    "n_orders_at_or_above_prior": 2
+   },
+   "top3": {
+    "min": 0.4059472340478151,
+    "max": 0.42323752128901393,
+    "prior": 0.48435741110555786,
+    "n_orders_at_or_above_prior": 0
+   },
+   "top5": {
+    "min": 0.6396748635277988,
+    "max": 0.6509771762777172,
+    "prior": 0.7047127258858374,
+    "n_orders_at_or_above_prior": 0
+   },
+   "mrr": {
+    "min": 0.33213517068109843,
+    "max": 0.38439302077052984,
+    "prior": 0.4063853576845534,
+    "n_orders_at_or_above_prior": 0
+   }
+  },
+  "paired_declaration_vs_prior": {
+   "top1": {
+    "retrieval_per_split": [
+     0.16414141414141414,
+     0.1683673469387755,
+     0.15217391304347827,
+     0.19230769230769232,
+     0.1687344913151365
+    ],
+    "prior_per_split": [
+     0.1893939393939394,
+     0.19642857142857142,
+     0.17632850241545894,
+     0.17032967032967034,
+     0.20099255583126552
+    ],
+    "diff_per_split": [
+     -0.02525252525252525,
+     -0.028061224489795922,
+     -0.024154589371980673,
+     0.021978021978021983,
+     -0.03225806451612903
+    ],
+    "diff_mean": -0.017549676330481778,
+    "retrieval_wins": 1,
+    "prior_wins": 4,
+    "ties": 0
+   },
+   "top3": {
+    "retrieval_per_split": [
+     0.41414141414141414,
+     0.42091836734693877,
+     0.39855072463768115,
+     0.4532967032967033,
+     0.4292803970223325
+    ],
+    "prior_per_split": [
+     0.5,
+     0.4846938775510204,
+     0.463768115942029,
+     0.5192307692307693,
+     0.45409429280397023
+    ],
+    "diff_per_split": [
+     -0.08585858585858586,
+     -0.06377551020408162,
+     -0.06521739130434784,
+     -0.06593406593406598,
+     -0.02481389578163773
+    ],
+    "diff_mean": -0.0611198898165438,
+    "retrieval_wins": 0,
+    "prior_wins": 5,
+    "ties": 0
+   },
+   "top5": {
+    "retrieval_per_split": [
+     0.6414141414141414,
+     0.6505102040816326,
+     0.6231884057971014,
+     0.6648351648351648,
+     0.674937965260546
+    ],
+    "prior_per_split": [
+     0.6944444444444444,
+     0.7168367346938775,
+     0.6980676328502415,
+     0.7417582417582418,
+     0.6724565756823822
+    ],
+    "diff_per_split": [
+     -0.05303030303030298,
+     -0.06632653061224492,
+     -0.0748792270531401,
+     -0.07692307692307698,
+     0.002481389578163795
+    ],
+    "diff_mean": -0.053735549608120235,
+    "retrieval_wins": 1,
+    "prior_wins": 4,
+    "ties": 0
+   },
+   "mrr": {
+    "retrieval_per_split": [
+     0.3593765381644167,
+     0.36521872401974437,
+     0.3481951489197863,
+     0.38805861415751514,
+     0.3673388164082949
+    ],
+    "prior_per_split": [
+     0.4070496632996641,
+     0.41072275230438465,
+     0.3994967793880834,
+     0.4073512796727105,
+     0.40730631375792414
+    ],
+    "diff_per_split": [
+     -0.04767312513524735,
+     -0.045504028284640285,
+     -0.05130163046829711,
+     -0.019292665515195373,
+     -0.03996749734962923
+    ],
+    "diff_mean": -0.04074778935060187,
+    "retrieval_wins": 0,
+    "prior_wins": 5,
+    "ties": 0
+   },
+   "cluster": {
+    "retrieval_per_split": [
+     0.32575757575757575,
+     0.35459183673469385,
+     0.3188405797101449,
+     0.36813186813186816,
+     0.34491315136476425
+    ],
+    "prior_per_split": [
+     0.3838383838383838,
+     0.39540816326530615,
+     0.39371980676328505,
+     0.4340659340659341,
+     0.39950372208436724
+    ],
+    "diff_per_split": [
+     -0.058080808080808066,
+     -0.04081632653061229,
+     -0.07487922705314015,
+     -0.06593406593406592,
+     -0.05459057071960299
+    ],
+    "diff_mean": -0.05886019966364588,
+    "retrieval_wins": 0,
+    "prior_wins": 5,
+    "ties": 0
+   }
+  },
+  "mode_prior_cluster": {
+   "per_split": [
+    0.3838383838383838,
+    0.39540816326530615,
+    0.17632850241545894,
+    0.17032967032967034,
+    0.39950372208436724
+   ],
+   "mean": 0.3050816883866373
+  },
+  "prevalence_tiebreak": {
+   "top1_per_split": [
+    0.1919191919191919,
+    0.2066326530612245,
+    0.20048309178743962,
+    0.21153846153846154,
+    0.19106699751861042
+   ],
+   "top1": 0.2003280791649856,
+   "macro_per_split": [
+    0.10348484848484847,
+    0.11817932080842394,
+    0.10146786599992738,
+    0.11770102762512631,
+    0.0978212682379349
+   ],
+   "macro": 0.10773086623125219
+  },
+  "note": "Rankings sort by score, then by the order, which keeps modes outside the tie components in declaration order. Paired differences are retrieval under declaration order minus the prior, per split. The cluster row compares the retrieval's cluster top-1 with the fit-half majority cluster, as prior_vs_retrieval does. mode_prior_cluster is the cluster accuracy of the prior's top category, mapped to its mode. prevalence_tiebreak breaks each rank-1 tie by fit-half category frequency, most frequent first, then declaration order."
+ },
+ "balanced_recall_expected": {
+  "retrieval": {
+   "macro_per_split": [
+    0.10389161889161892,
+    0.11531342966547223,
+    0.09337285485824441,
+    0.11590631886591325,
+    0.09648381967826412
+   ],
+   "macro": 0.1049936083919026,
+   "micro_per_split": [
+    0.156986531986532,
+    0.16709183673469388,
+    0.14774557165861513,
+    0.17032967032967034,
+    0.15550041356492972
+   ],
+   "micro": 0.15953080485488821,
+   "per_category": {
+    "0": 0.23831609957283845,
+    "1": 0.3199869862647641,
+    "2": 0.0,
+    "3": 0.0,
+    "4": 0.0,
+    "5": 0.0,
+    "6": 0.23258259532877532,
+    "7": 0.14587914023960535,
+    "8": 0.0,
+    "9": 0.0,
+    "10": 0.05764150943396227,
+    "11": 0.11427941176470588
+   },
+   "n_zero_categories": 6,
+   "n_categories": 12,
+   "macro_min_over_orders": 0.09162728095777582,
+   "macro_max_over_orders": 0.11859276016275563,
+   "n_orders_below_constant_bound": 1,
+   "declaration_macro_per_split": [
+    0.11629402129402132,
+    0.12135772135524552,
+    0.10550012406444352,
+    0.1379334268048939,
+    0.11187850729517396
+   ],
+   "declaration_macro": 0.11859276016275563
+  },
+  "two-stage": {
+   "macro_per_split": [
+    0.20046068796068797,
+    0.22059652376435582,
+    0.18199922116056377,
+    0.23482822723090604,
+    0.20238075196408528
+   ],
+   "macro": 0.2080530824161198,
+   "micro_per_split": [
+    0.29292929292929293,
+    0.30357142857142855,
+    0.27053140096618356,
+    0.3392857142857143,
+    0.3027295285359802
+   ],
+   "micro": 0.3018094730577199,
+   "per_category": {
+    "0": 0.23831609957283845,
+    "1": 0.6450439313772647,
+    "2": 0.0,
+    "3": 0.0,
+    "4": 0.0,
+    "5": 0.0,
+    "6": 0.5453046849905933,
+    "7": 0.5969133192389007,
+    "8": 0.0,
+    "9": 0.0,
+    "10": 0.05764150943396227,
+    "11": 0.11427941176470588
+   },
+   "n_zero_categories": 6,
+   "n_categories": 12,
+   "macro_min_over_orders": 0.20261912015196884,
+   "macro_max_over_orders": 0.21348704468027072,
+   "n_orders_below_constant_bound": 0,
+   "declaration_macro_per_split": [
+    0.20614250614250615,
+    0.22625690112284635,
+    0.18714501875919157,
+    0.23982822723090608,
+    0.20806257014590346
+   ],
+   "declaration_macro": 0.21348704468027072
+  },
+  "n_relative_orders": 12,
+  "constant_macro_bound_per_split": [
+   0.09090909090909091,
+   0.1,
+   0.09090909090909091,
+   0.1,
+   0.09090909090909091
+  ],
+  "constant_macro_bound": 0.09454545454545456,
+  "note": "Expected credit over the rank-1 tied set equals the mean over all relative orders, per split. Per-category values are means over the splits in which the category is in the test half. declaration_macro is the hard-prediction value that balanced_recall reports. n_orders_below_constant_bound compares five-split means with constant_macro_bound."
+ },
+ "constant_router": {
+  "top1": {
+   "router_per_split": [
+    0.3434343434343434,
+    0.33163265306122447,
+    0.321256038647343,
+    0.3901098901098901,
+    0.3573200992555831
+   ],
+   "two_stage_per_split": [
+    0.3005050505050505,
+    0.3112244897959184,
+    0.2777777777777778,
+    0.34615384615384615,
+    0.31017369727047145
+   ],
+   "router": 0.3487506049016768,
+   "two_stage": 0.30916697230061285,
+   "diff_per_split": [
+    0.04292929292929293,
+    0.02040816326530609,
+    0.04347826086956519,
+    0.043956043956043966,
+    0.04714640198511166
+   ],
+   "diff_mean": 0.03958363260106397,
+   "n_router_higher": 5,
+   "n_splits": 5
+  },
+  "macro": {
+   "router_per_split": [
+    0.23737919737919738,
+    0.23980519480519477,
+    0.20881098373766996,
+    0.26281136244416536,
+    0.23639169472502805
+   ],
+   "two_stage_per_split": [
+    0.20614250614250615,
+    0.22625690112284635,
+    0.18714501875919157,
+    0.23982822723090608,
+    0.20806257014590346
+   ],
+   "router": 0.2370396866182511,
+   "two_stage": 0.21348704468027072,
+   "diff_per_split": [
+    0.031236691236691233,
+    0.013548293682348417,
+    0.02166596497847839,
+    0.022983135213259287,
+    0.028329124579124593
+   ],
+   "diff_mean": 0.023552641937980383,
+   "n_router_higher": 5,
+   "n_splits": 5
+  },
+  "note": "router: every held-out cycle goes to the load-torque group's resolver, fitted on the fit half as in balanced_recall; it can only output categories 1, 6 and 7. two_stage: balanced_recall's two-stage arm under declaration order."
+ },
+ "set_valued": {
+  "group": {
+   "coverage": 0.34244700233980935,
+   "coverage_per_split": [
+    0.32575757575757575,
+    0.35459183673469385,
+    0.3188405797101449,
+    0.36813186813186816,
+    0.34491315136476425
+   ],
+   "size": 2.3429607959662055,
+   "size_per_split": [
+    2.345959595959596,
+    2.3622448979591835,
+    2.28743961352657,
+    2.3543956043956045,
+    2.364764267990074
+   ],
+   "prior_coverage": 0.3846578542230716,
+   "prior_coverage_per_split": [
+    0.3888888888888889,
+    0.39285714285714285,
+    0.3695652173913043,
+    0.3873626373626374,
+    0.38461538461538464
+   ],
+   "balanced": 0.24281107208176964,
+   "balanced_per_split": [
+    0.2289148239148239,
+    0.26673195238737135,
+    0.22176911899912757,
+    0.25790910596049965,
+    0.23873035914702578
+   ],
+   "prior_balanced": 0.22183306335048592,
+   "prior_balanced_per_split": [
+    0.2037121212121212,
+    0.24051369863013697,
+    0.21534257531324982,
+    0.21942857142857145,
+    0.23016835016835016
+   ]
+  },
+  "tied": {
+   "coverage": 0.2810863138953702,
+   "coverage_per_split": [
+    0.2828282828282828,
+    0.29081632653061223,
+    0.2536231884057971,
+    0.3076923076923077,
+    0.2704714640198511
+   ],
+   "size": 1.7662948368668665,
+   "size_per_split": [
+    1.77020202020202,
+    1.7729591836734695,
+    1.7294685990338163,
+    1.7747252747252746,
+    1.784119106699752
+   ],
+   "prior_coverage": 0.33027128762953245,
+   "prior_coverage_per_split": [
+    0.3383838383838384,
+    0.3239795918367347,
+    0.3188405797101449,
+    0.33516483516483514,
+    0.3349875930521092
+   ],
+   "balanced": 0.1853303820272274,
+   "balanced_per_split": [
+    0.18917280917280915,
+    0.20291616291368708,
+    0.15818607447766667,
+    0.20582832260676645,
+    0.17054854096520763
+   ],
+   "prior_balanced": 0.1673725767641929,
+   "prior_balanced_per_split": [
+    0.16583333333333333,
+    0.173013698630137,
+    0.15375899760063982,
+    0.18142857142857144,
+    0.16282828282828285
+   ]
+  },
+  "constant_group": {
+   "group": [
+    "FM_losecan",
+    "FM_axisweight",
+    "FM_varweight"
+   ],
+   "size": 3,
+   "coverage_per_split": [
+    0.3838383838383838,
+    0.39540816326530615,
+    0.39371980676328505,
+    0.4340659340659341,
+    0.39950372208436724
+   ],
+   "coverage": 0.40130720200345527,
+   "majority_is_load_group_per_split": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "note": "group: every mode in the rank-1 mode's group (cluster_map); tied: the rank-1 tied set. coverage: the true category's mode is in the set. prior_coverage: the prior's top-|S| categories for the same cycle, |S| the size of that cycle's set. balanced: mean over categories in the test half. Group coverage equals the retrieval's cluster top-1, tied coverage equals the oracle tie-break ceiling. constant_group always answers the load-torque group; it equals cluster_majority when the fit-half majority cluster is that group on every split."
+ },
  "note": "Trivial baselines the published evaluation omitted. The prevalence prior beats the retrieval on every ranking metric; balanced recall is where the retrieval and the repair still show an effect; the tie-break interval bounds what a single top-1 number can mean when 68% of cycles tie at rank 1."
 }
