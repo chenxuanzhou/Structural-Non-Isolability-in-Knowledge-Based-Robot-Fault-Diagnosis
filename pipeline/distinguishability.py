@@ -677,6 +677,30 @@ def route_margin_tau(ctx, grid=TAU_GRID, n_splits=TAU_SPLITS, min_cov=TAU_MIN_CO
     }
 
 
+def authoring_sensitivity(ctx, hints=("any", "transfer", "grip")):
+    """Rank-1 ties when axis weight's phase hint is declared differently.
+
+    The tie count belongs to this knowledge base, not to the robot: one
+    plausible change to one declaration moves it. The hint is restored after.
+    """
+    fm = next(f for f in FMEA if f["id"] == "FM_axisweight")
+    shipped = fm["phase_hint"]
+    out = {"mode": "FM_axisweight", "shipped_hint": shipped, "by_hint": {}}
+    try:
+        for h in hints:
+            fm["phase_hint"] = h
+            comp = Counter()
+            for i in ctx["ids"]:
+                t = _tied_ids(retrieve(ctx["recs"][i], top_k=len(FMEA)))
+                if len(t) > 1:
+                    comp[_set_key(t)] += 1
+            out["by_hint"][h] = {"n_tied": int(sum(comp.values())),
+                                 "composition": _counts(comp)}
+    finally:
+        fm["phase_hint"] = shipped
+    return out
+
+
 def revision_checks(recs, verbose=True):
     """Run the checks above; keys are the ones written to the results file."""
     ctx = _context(recs)
@@ -684,7 +708,12 @@ def revision_checks(recs, verbose=True):
            "phase_sensitivity": phase_sensitivity(ctx),
            "kb_columns": kb_columns(ctx),
            "localization": localization(ctx),
-           "route_margin_tau": route_margin_tau(ctx)}
+           "route_margin_tau": route_margin_tau(ctx),
+           "authoring_sensitivity": authoring_sensitivity(ctx)}
+    # abstaining at random would already be right this often
+    wrong = sum(ctx["rep"].get(ctx["ranked"][i][0]["id"]) != ctx["rep"].get(ctx["true_fm"][i])
+                for i in ctx["ids"])
+    out["route_margin_tau"]["wrong_cluster_base_rate"] = wrong / len(ctx["ids"])
     if not verbose:
         return out
     ts, ps, kc = out["tie_composition_sets"], out["phase_sensitivity"], out["kb_columns"]
@@ -717,6 +746,9 @@ def revision_checks(recs, verbose=True):
               f"acc accepted {s['cluster_acc_accepted']:.3f}  "
               f"acc abstained {s['cluster_acc_abstained']:.3f}  "
               f"precision {s['abstention_precision']:.3f}")
+    print("  axis weight phase hint -> rank-1 ties: " + ", ".join(
+        f"{h} {d['n_tied']}" for h, d in out["authoring_sensitivity"]["by_hint"].items()))
+    print(f"  wrong-cluster base rate {rt['wrong_cluster_base_rate']:.3f}")
     fs = rt["fit_half_selection"]
     print(f"  tau chosen on fit halves {fs['chosen_tau_counts']}: held-out precision "
           f"{fs['heldout_precision_mean']:.3f} [{fs['heldout_precision_p2_5']:.3f}, "

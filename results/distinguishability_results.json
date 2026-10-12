@@ -1167,6 +1167,38 @@
       "shipped_tau_heldout_precision_p2_5": 0.7543787748058671,
       "shipped_tau_heldout_precision_p97_5": 0.8853803790983606,
       "in_sample_precision_shipped_tau": 0.819672131147541
+    },
+    "wrong_cluster_base_rate": 0.6596026490066225
+  },
+  "authoring_sensitivity": {
+    "mode": "FM_axisweight",
+    "shipped_hint": "any",
+    "by_hint": {
+      "any": {
+        "n_tied": 514,
+        "composition": {
+          "FM_axisweight+FM_losecan": 238,
+          "FM_axisweight+FM_varweight": 199,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        }
+      },
+      "transfer": {
+        "n_tied": 315,
+        "composition": {
+          "FM_axisweight+FM_losecan": 238,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        }
+      },
+      "grip": {
+        "n_tied": 276,
+        "composition": {
+          "FM_axisweight+FM_varweight": 199,
+          "FM_axisweight+FM_losecan+FM_varweight": 61,
+          "FM_miscommutation+FM_overtemp": 16
+        }
+      }
     }
   }
 }

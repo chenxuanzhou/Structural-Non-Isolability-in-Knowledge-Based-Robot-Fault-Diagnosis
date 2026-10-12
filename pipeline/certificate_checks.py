@@ -120,6 +120,8 @@ def score_fixed(ctx, dims, seed):
     y = [cat_of[i] for i in test]
     return {"seed": seed, "test": test, "routed": routed, "pred": pred,
             "group_true": yt.tolist(), "group_pred": [int(v) for v in pg],
+            "group_proba": clf.predict_proba(Xt).tolist(),
+            "group_classes": [int(c) for c in clf.classes_],
             "two_stage_top1": float(np.mean([a == b for a, b in zip(p, y)])),
             "balanced_recall": B._macro(p, y)[0],
             "group_acc": float(np.mean(pg == yt))}
@@ -337,7 +339,9 @@ def group_pairs(ctx, fixed_runs, verbose=True):
     conf = np.zeros((len(cats), len(cats)), dtype=int)
     for s, run in fixed_runs.items():
         y, p = np.array(run["group_true"]), np.array(run["group_pred"])
-        row = {"seed": s, "recall": {}, "pairs": {}, "pairs_binary": {}}
+        row = {"seed": s, "recall": {}, "pairs": {}, "pairs_binary": {},
+               "pairs_restricted": {}}
+        proba, classes = np.array(run["group_proba"]), run["group_classes"]
         for c in cats:
             m = y == c
             row["recall"][name[c]] = float(np.mean(p[m] == c)) if m.any() else None
@@ -346,6 +350,12 @@ def group_pairs(ctx, fixed_runs, verbose=True):
             row["pairs"][pkey[pr]] = dict(
                 _pair_scores(y, p, pr),
                 n_other_mode=int((np.isin(y, pr) & ~np.isin(p, pr)).sum()))
+            # every held-out cycle of the pair, the 3-way resolver choosing
+            # between the pair's two modes only
+            m = np.isin(y, pr)
+            cols = [classes.index(c) for c in pr]
+            pr_pred = np.array(pr)[np.argmax(proba[m][:, cols], axis=1)]
+            row["pairs_restricted"][pkey[pr]] = _pair_scores(y[m], pr_pred, pr)
             # a separate two-class resolver fitted on this pair's fit cycles only
             f = [i for i in cf if cat_of[i] in pr]
             t = [i for i in ct if cat_of[i] in pr]
@@ -371,6 +381,11 @@ def group_pairs(ctx, fixed_runs, verbose=True):
         "definition_binary": "pairs_binary: a separate two-class resolver (same dims) fitted "
                              "on the pair's fit-half cycles and scored on all of the pair's "
                              "held-out cycles",
+        "definition_restricted": "pairs_restricted: all held-out cycles whose true mode is a "
+                                 "or b, the 3-way resolver choosing between a and b only "
+                                 "(argmax of its probabilities over the two). Unlike "
+                                 "pair_acc it does not drop the cycles the resolver sends to "
+                                 "the third mode, so it is the figure to quote.",
         "modes": {str(c): name[c] for c in cats},
         "per_split": rows,
         "recall_mean": {name[c]: _mean([r["recall"][name[c]] for r in rows
@@ -378,6 +393,7 @@ def group_pairs(ctx, fixed_runs, verbose=True):
         "pair_acc_mean": pair_mean("pairs", "acc"),
         "pair_balanced_mean": pair_mean("pairs", "balanced"),
         "binary_acc_mean": pair_mean("pairs_binary", "acc"),
+        "restricted_acc_mean": pair_mean("pairs_restricted", "acc"),
         "binary_balanced_mean": pair_mean("pairs_binary", "balanced"),
         "confusion_pooled": {"rows_true_cols_pred": [name[c] for c in cats],
                              "counts": conf.tolist()},
@@ -396,6 +412,7 @@ def group_pairs(ctx, fixed_runs, verbose=True):
                            ("pairs, pooled", "pair_acc_pooled"),
                            ("pairs, balanced", "pair_balanced_mean"),
                            ("binary, mean", "binary_acc_mean"),
+                           ("restricted, mean", "restricted_acc_mean"),
                            ("binary, balanced", "binary_balanced_mean")):
             print(f"   {label:<17}" + "  ".join(f"{k} {v:.3f}" for k, v in out[key].items()))
     return out
@@ -602,7 +619,7 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
             row["control"] = dict(_scores(ctx, test, [int(v) for v in pc], top1),
                                   labels=k)
             for regime in ("targeted", "unrestricted"):
-                resolvers, drawn, fitted = {}, 0, 0
+                resolvers, drawn, fitted, n_sub = {}, 0, 0, {}
                 for members, cats in ctx["testable"]:
                     if regime == "targeted":
                         sub = [i for i in shuf if cat_of[i] in cats][:k]
@@ -615,14 +632,18 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
                     Xc, _ = R.matrix(cyc, sub, col, FIXED)
                     clf, _ = R._fit_predict(Xc, np.array([cat_of[i] for i in sub]), Xc)
                     resolvers[rep.get(sorted(members)[0])] = clf
+                    n_sub[rep.get(sorted(members)[0])] = len(sub)
                 pred = list(kb)
+                applied = 0
                 for r, clf in resolvers.items():
                     idx = [j for j, f in enumerate(top1) if rep.get(f) == r]
                     if idx:
+                        applied += n_sub[r]
                         for j, v in zip(idx, clf.predict(Xte_d[idx])):
                             pred[j] = int(v)
                 row[regime] = dict(_scores(ctx, test, pred, top1), labels_drawn=drawn,
-                                   labels_fitted=fitted, n_resolvers=len(resolvers))
+                                   labels_fitted=fitted, labels_applied=applied,
+                                   n_resolvers=len(resolvers))
             rows.append(row)
 
     summary = {}
@@ -638,8 +659,10 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
             return {"control": float(k),
                     "targeted_drawn": _mean(col_("targeted", "labels_drawn", rs)),
                     "targeted_fitted": _mean(col_("targeted", "labels_fitted", rs)),
+                    "targeted_applied": _mean(col_("targeted", "labels_applied", rs)),
                     "unrestricted_drawn": _mean(col_("unrestricted", "labels_drawn", rs)),
-                    "unrestricted_fitted": _mean(col_("unrestricted", "labels_fitted", rs))}
+                    "unrestricted_fitted": _mean(col_("unrestricted", "labels_fitted", rs)),
+                    "unrestricted_applied": _mean(col_("unrestricted", "labels_applied", rs))}
 
         paper = [r for r in ok if r["seed"] in PAPER_SEEDS]
         summary[str(k)] = {
@@ -667,7 +690,11 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
             "labels_drawn": "labels the arm spends in testable twin groups (targeted: up "
                             "to k per group, summed over groups)",
             "labels_fitted": "labels in groups whose resolver was fitted (two classes "
-                             "present); the labels the arm actually uses",
+                             "present)",
+            "labels_applied": "labels in resolvers that receive at least one held-out "
+                              "cycle; no cycle is ever routed to the collision or gripping "
+                              "group, so only load-torque labels can change a prediction "
+                              "and this count never exceeds k",
             "paper_splits_mean": "the same means over seeds 0-4 only",
             "group_acc": "the predicted mode's twin cluster equals the true one",
         },
