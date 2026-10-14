@@ -1,0 +1,11 @@
+Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis
+Chenxuan Zhou, Jie Liang
+University of Technology Sydney
+
+Declaration of generative AI and AI-assisted technologies in the writing process
+
+During the preparation of this work the authors used Claude (Anthropic) in
+order to revise the wording of the manuscript, check the reported numbers
+against the analysis outputs, and write parts of the analysis code. After using
+this tool, the authors reviewed and edited the content as needed and take full
+responsibility for the content of the publication.

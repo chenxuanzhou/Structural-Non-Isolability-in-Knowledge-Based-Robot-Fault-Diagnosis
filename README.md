@@ -4,8 +4,8 @@ Code and derived data for a study of which failure modes an FMEA-based
 diagnosis layer for an industrial robot can isolate, and which change of
 representation helps.
 
-The paper, *Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis:
-Tie-Break Intervals and Grouped Validation* (SAFEPROCESS 2027 manuscript), is
+The paper, *Structural Non-Isolability in Knowledge-Based Robot Fault
+Diagnosis* (SAFEPROCESS 2027 manuscript), is
 `safeprocess2027_final.tex` / `safeprocess2027_final.pdf`. Everything else in
 this repository is the experimental record behind it.
 
@@ -131,7 +131,7 @@ place it in `data/`.
 | Sec. 4, ties, groups, phase, authoring sensitivity | `distinguishability_results.json` |
 | Sec. 4, direction and time course added to the score | `certificate_checks.json` → `mode_signature` |
 | Table 1 and Sec. 5.1 | `baselines.json` → `prior_vs_retrieval`, `tie_robust`, `balanced_recall_expected`, `balanced_recall` |
-| Fig. 1 and Sec. 5.2 | `baselines.json` → `tiebreak_exact`, `set_valued` |
+| Table 1 (all-orders row) and Sec. 5.2 | `baselines.json` → `tiebreak_exact`, `tie_robust` → `range_over_orders`, `balanced_recall_expected` (`macro_min_over_orders`, `macro_max_over_orders`), `set_valued` |
 | Table 2 and Sec. 6 | `repair_results.json` (certificates, fixed configuration, summary), `certificate_checks.json` (searched dims, `nested_fixed` with `fixed_gain_over_retrieval`, subsets, within-group pairs, `routing_fixed`), `baselines.json` → `constant_router` |
 | Sec. 7 | `protocol_check.json`, `repair_results.json` → `leakage_check` |
 | Sec. 8 | `certificate_checks.json` → `label_budget` (`balanced_recall_tied`); `repair_results.json` → `control_flat_classifier`; `baselines.json` → `balanced_recall` → `flat control` (per-category recall) |
@@ -148,16 +148,16 @@ shipped).
 ## Figures and building the paper
 
 ```bash
-python make_figures.py                                    # every figure
-python make_figures.py fig_tiebreak fig_signatures_column # the two the paper uses
+python make_figures.py                        # every figure
+python make_figures.py fig_signatures_column  # the one the paper uses
 ```
 
 | Paper | File | Contents |
 |---|---|---|
-| Fig. 1 | `figures/fig_tiebreak.pdf` | top-1 under all 12 relevant tie-break orders, and group accuracy |
-| Fig. 2 | `figures/fig_signatures_column.pdf` | knowledge-base columns of the modes in the four groups |
+| Fig. 1 | `figures/fig_signatures_column.pdf` | knowledge-base columns of the modes in the four groups |
 
-The other figures in `figures/` belong to the long version.
+The other figures in `figures/` belong to the long version; `fig_tiebreak.pdf`
+shows the tie-break range that Table 1 of the paper now gives as a row.
 
 To build the paper, put IFAC's official `ifacconf.cls` (v1.3, from the
 `ifacconf_latex` kit on the
@@ -184,6 +184,7 @@ fonts embedded, no Type 3 fonts.
 ```
 safeprocess2027_final.tex / .pdf   the paper
 safeprocess2027.bib, ifacconf.bst   its references and IFAC's bibliography style
+ai_declaration.txt                  generative-AI declaration, submitted as a separate file
 make_figures.py    rebuilds figures/ from results/
 pipeline/          the diagnosis pipeline and every evaluation script
   line_kg.py             FMEA knowledge graph, 14 failure modes, retrieval scoring
@@ -263,14 +264,14 @@ here on acceptance. Until then, please cite the paper's title and the archived
 code and data:
 
 > Zhou, C. and Liang, J. *Structural Non-Isolability in Knowledge-Based Robot
-> Fault Diagnosis: Tie-Break Intervals and Grouped Validation.* Code and data:
+> Fault Diagnosis.* Code and data:
 > https://doi.org/10.5281/zenodo.22089173
 
 ```bibtex
 @misc{zhou2026nonisolability,
   author = {Zhou, Chenxuan and Liang, Jie},
-  title  = {Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis:
-            Tie-Break Intervals and Grouped Validation -- code and data},
+  title  = {Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis
+            -- code and data},
   year   = {2026},
   doi    = {10.5281/zenodo.22089173},
   url    = {https://doi.org/10.5281/zenodo.22089173}
