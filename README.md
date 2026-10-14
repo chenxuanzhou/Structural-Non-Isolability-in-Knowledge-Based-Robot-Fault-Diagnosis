@@ -251,13 +251,13 @@ The paper is a SAFEPROCESS 2027 manuscript; full citation details will be added
 here on acceptance. Until then, please cite the paper's title and the archived
 code and data:
 
-> Zhou, C. and Liang, C.J. *Structural Non-Isolability in Knowledge-Based Robot
+> Zhou, C. and Liang, J. *Structural Non-Isolability in Knowledge-Based Robot
 > Fault Diagnosis: Tie-Break Intervals and Grouped Validation.* Code and data:
 > https://doi.org/10.5281/zenodo.22089173
 
 ```bibtex
 @misc{zhou2026nonisolability,
-  author = {Zhou, Chenxuan and Liang, Christy Jie},
+  author = {Zhou, Chenxuan and Liang, Jie},
   title  = {Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis:
             Tie-Break Intervals and Grouped Validation -- code and data},
   year   = {2026},
