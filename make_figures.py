@@ -5,16 +5,16 @@ in a figure can drift from the number in the text.  Vector PDF out, sized for a
 single column (3.5 in) or the full width (7.0 in).
 
 The six-page SAFEPROCESS paper (safeprocess2027_final.tex) has room for two
-figures, so it uses only the most important ones and merges where it can:
-    Fig. 1  fig_teaser       tie-break interval + balanced recall, merged
-    Fig. 2  fig_signatures   structural signatures
-The remaining figures (protocol, certificates, power, granularity, label budget)
-belong to the long version; their numbers appear in the short paper's tables
-and text instead.
+single-column figures:
+    Fig. 1  fig_tiebreak            tie-break interval and group accuracy
+    Fig. 2  fig_signatures_column   knowledge-base columns of the four groups
+The remaining figures (full-width signatures, protocol, certificates, power,
+granularity, label budget) belong to the long version; their numbers appear in
+the short paper's tables and text instead.
 
 Run from anywhere; name figures to build only those:
     python make_figures.py                  # every figure
-    python make_figures.py fig_teaser       # just Fig. 1
+    python make_figures.py fig_tiebreak     # just Fig. 1
 """
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ BLUE_600 = "#184f95"
 
 mpl.rcParams.update({
     "font.family": "serif",
-    "font.serif": ["Times New Roman", "DejaVu Serif"],
+    "font.serif": ["Times New Roman", "Liberation Serif", "DejaVu Serif"],
     "font.size": 8,
     "axes.labelsize": 8,
     "axes.titlesize": 8.5,
@@ -110,101 +110,125 @@ def save(fig, name):
 
 
 # ===========================================================================
-# Fig. 1 (SAFEPROCESS) -- the measurement, two panels merged into one figure.
-# Left: the tie-break interval against the group answer.  Right: balanced
-# recall, the one reading a constant predictor cannot game.  Every value on
-# the left is a five-split leave-setting-out mean on the splits of Table 1, so
-# the prior rules are the same population as the marks, not a scale reference.
+# Fig. 1 (SAFEPROCESS) -- the tie-break interval, one column.  Every mark is a
+# five-split leave-setting-out mean on the splits of Table 1, and the marks are
+# all relative orders of the tied modes that can change the result.
 # ===========================================================================
-def fig_teaser():
+def fig_tiebreak():
     b = load("baselines.json")
-    tb = b["tiebreak_grouped"]
+    ex = b["tiebreak_exact"]
     pr = b["prior_vs_retrieval"]
-    br = b["balanced_recall"]
+    sv = b["set_valued"]
+    orders = sorted(o["top1_mean"] for o in ex["per_order"])
+    decl = ex["declaration_order"]
 
-    style = {"font.family": "sans-serif", "font.sans-serif": ["DejaVu Sans"],
-             "font.size": 7.5, "axes.labelsize": 7.5, "axes.titlesize": 8,
-             "xtick.labelsize": 7.5, "ytick.labelsize": 7.5}
-    with mpl.rc_context(style):
-        fig, (ax, bx) = plt.subplots(
-            1, 2, figsize=(7.2, 2.06),
-            gridspec_kw=dict(width_ratios=[1.0, 0.72], wspace=0.55))
+    fig, ax = plt.subplots(figsize=(3.35, 1.2))
+    y_pt, y_cl = 1.0, 0.0
+    lo, hi = ex["exact_min"], ex["exact_max"]
+    ax.add_patch(Rectangle((lo, y_pt - 0.11), hi - lo, 0.22,
+                           facecolor=FILL_NEUTRAL_2, edgecolor="none", zorder=1))
+    ax.plot(orders, [y_pt] * len(orders), "|", ms=7, mew=1.0, color=INK_2, zorder=2)
+    ax.plot(decl, y_pt, "o", ms=5.5, color=BLUE, mec="white", mew=0.8, zorder=4)
+    ax.plot(ex["exact_mean"], y_pt, "D", ms=4.5, color=INK, mec="white", mew=0.6,
+            zorder=4)
+    ax.plot(pr["prevalence_prior"]["top1"], y_pt, "s", ms=5, mfc="white",
+            mec=CRITICAL, mew=1.2, zorder=5)
+    ax.annotate(f"{len(orders)} orders, {lo:.3f}–{hi:.3f}", ((lo + hi) / 2, y_pt + 0.2),
+                ha="center", va="bottom", fontsize=6.8, color=INK_2)
 
-        # -- left: point answer (top-1) against group answer (cluster top-1) --
-        y_pt, y_cl = 1.0, 0.0
-        lo, hi = tb["random_min"], tb["random_max"]
-        ax.add_patch(Rectangle((lo, y_pt - 0.09), hi - lo, 0.18,
-                               facecolor=FILL_NEUTRAL, edgecolor="none", zorder=1))
-        for x in (lo, hi):
-            ax.plot([x, x], [y_pt - 0.09, y_pt + 0.09], color=INK_2, lw=1.0, zorder=2)
-        for key, ms in (("reverse_declaration", 5), ("alphabetical", 5),
-                        ("declaration_order", 7.5)):
-            ax.plot(tb[key], y_pt, "o", ms=ms, color=BLUE, mec="white",
-                    mew=1.2, zorder=4)
-        ax.plot(tb["oracle_ceiling"], y_pt, "o", ms=6.5, mfc="white", mec=INK_2,
-                mew=1.8, zorder=4)
-        ax.annotate("", xy=(lo, y_pt + 0.24), xytext=(hi, y_pt + 0.24),
-                    arrowprops=dict(arrowstyle="<->", color=BLUE, lw=1.2))
-        ax.annotate(f"{tb['interval_width']:.3f} wide", ((lo + hi) / 2, y_pt + 0.29),
-                    ha="center", va="bottom", color=BLUE)
+    ax.plot(pr["cluster_retrieval"], y_cl, "o", ms=5.5, color=BLUE, mec="white",
+            mew=0.8, zorder=4)
+    ax.plot(sv["constant_group"]["coverage"], y_cl, "s", ms=5, mfc="white",
+            mec=CRITICAL, mew=1.2, zorder=5)
 
-        ax.plot(tb["cluster_by_tiebreak"]["declaration"], y_cl, "o", ms=7.5,
-                color=BLUE, mec="white", mew=1.2, zorder=4)
-        ax.annotate(f"same under all {tb['draws'] + 3} orderings",
-                    (tb["cluster_by_tiebreak"]["declaration"], y_cl),
-                    xytext=(-9, 0), textcoords="offset points", ha="right",
-                    va="center", fontsize=7, color=BLUE)
+    ax.set_yticks([y_pt, y_cl])
+    ax.set_yticklabels(["failure mode\n(top-1)", "group"])
+    ax.tick_params(axis="y", length=0)
+    ax.set_xlim(0.10, 0.43)
+    ax.set_ylim(-0.45, 1.6)
+    ax.set_xticks([0.1, 0.2, 0.3, 0.4])
+    ax.set_xlabel("accuracy (mean of five leave-setting-out splits)")
+    tidy(ax, xgrid=True)
+    ax.spines["left"].set_visible(False)
 
-        for x, y in ((pr["prevalence_prior"]["top1"], y_pt),
-                     (pr["cluster_majority"], y_cl)):
-            ax.plot([x, x], [y - 0.17, y + 0.17], ls=(0, (2.5, 1.5)),
-                    color=CRITICAL, lw=1.6, zorder=3)
-            ax.annotate("prior", (x, y - 0.19), ha="center", va="top",
-                        fontsize=7, color=CRITICAL)
+    save(fig, "fig_tiebreak.pdf")
 
-        ax.annotate("point answer (top-1)", (0.01, y_pt + 0.62),
-                    xycoords=("axes fraction", "data"), va="center")
-        ax.annotate("group answer (cluster top-1)", (0.01, y_cl + 0.48),
-                    xycoords=("axes fraction", "data"), va="center")
-        ax.set_xlim(0.05, 0.46)
-        ax.set_ylim(-0.62, 1.82)
-        ax.set_xticks([0.1, 0.2, 0.3, 0.4])
-        ax.set_yticks([])
-        ax.set_xlabel("accuracy (five-split mean)")
-        ax.set_title("The point answer is not determined; the group is",
-                     loc="left", pad=6)
-        tidy(ax, xgrid=True)
-        ax.spines["left"].set_visible(False)
-        ax.spines["bottom"].set_color(INK)
 
-        # -- right: balanced recall -------------------------------------------
-        arms = [("prevalence prior", "prior (constant)", MUTED),
-                ("retrieval", "retrieval", BLUE),
-                ("two-stage + repair", "two-stage", BLUE),
-                ("flat control", "flat control", ORANGE)]
-        ys = np.arange(len(arms))[::-1]
-        for y, (lab, key, col) in zip(ys, arms):
-            v = br[key]["macro"]
-            bx.barh(y, v, height=0.52, color=col, edgecolor="none", zorder=2)
-            bx.annotate(f"{v:.3f}", (v, y), xytext=(4, 0), textcoords="offset points",
-                        va="center", ha="left")
-        u = br["uniform_macro"]
-        bx.axvline(u, color=INK_2, ls=(0, (2.5, 1.5)), lw=1.4, zorder=3)
-        bx.annotate("uniform over 12 (1/12)", (u, len(arms) - 0.45), xytext=(4, 0),
-                    textcoords="offset points", va="center", fontsize=7,
-                    color=MUTED)
-        bx.set_yticks(ys)
-        bx.set_yticklabels([a[0] for a in arms])
-        bx.set_xlim(0, 0.52)
-        bx.set_ylim(-0.6, len(arms) - 0.1)
-        bx.set_xticks([0.0, 0.1, 0.2, 0.3, 0.4, 0.5])
-        bx.set_xlabel("balanced recall")
-        bx.set_title("Balanced recall restores the ordering", loc="right", pad=6)
-        tidy(bx, xgrid=True)
-        bx.tick_params(axis="y", length=0)
-        bx.spines["left"].set_visible(False)
-        bx.spines["bottom"].set_color(INK)
-        save(fig, "fig_teaser.pdf")
+# ===========================================================================
+# Fig. 2 (SAFEPROCESS) -- the knowledge base's columns for the modes in the
+# four groups, at column width.  Backlash is shown because it shares families
+# with the gripping pair but not their scope.
+# ===========================================================================
+def fig_signatures_column():
+    import line_kg as K
+    import distinguishability as D
+
+    fmea = {e["id"]: e for e in K.FMEA}
+    rows = [("FM_axisweight", "Axis weight"), ("FM_losecan", "Lost can"),
+            ("FM_varweight", "Varying weight"),
+            ("FM_collision_foam", "Collision, foam"),
+            ("FM_collision_card", "Collision, carton"),
+            ("FM_misgrip", "Misgrip"), ("FM_invalidgrip", "Invalid grip"),
+            ("FM_miscommutation", "Miscommutation"),
+            ("FM_overtemp", "Over-temperature"), ("FM_backlash", "Backlash")]
+    cols = [("scope", "any"), ("scope", "load"), ("scope", "distal"),
+            ("fam", "motor_torque"), ("fam", "torque_sensor_a"),
+            ("fam", "joint_position"), ("fam", "joint_velocity"),
+            ("fam", "robot_current"),
+            ("phase", "grip"), ("phase", "transfer")]
+    col_labels = ["any", "load", "distal", "$\\tau_m$", "$\\tau_s$", "$q$",
+                  "$\\dot q$", "$I$", "grip", "transfer"]
+
+    def on(e, kind, v):
+        if kind == "scope":
+            return e["affects"] == v
+        if kind == "fam":
+            return v in e["manifests"]
+        return e["phase_hint"] in (v, "any")
+
+    with mpl.rc_context({"mathtext.fontset": "stix"}):
+        _signatures_column(fmea, rows, cols, col_labels, on)
+
+
+def _signatures_column(fmea, rows, cols, col_labels, on):
+    import distinguishability as D
+
+    fig, ax = plt.subplots(figsize=(3.35, 1.8))
+    for r, (fid, _) in enumerate(rows):
+        for c, (kind, v) in enumerate(cols):
+            ax.add_patch(Rectangle(
+                (c + 0.06, r + 0.06), 0.88, 0.88,
+                facecolor=BLUE_600 if on(fmea[fid], kind, v) else FILL_NEUTRAL_2,
+                edgecolor="white", linewidth=0.5, zorder=2))
+
+    # One bracket per group: identical columns, or nested ones (load torque).
+    row_of = {fid: i for i, (fid, _) in enumerate(rows)}
+    for grp in D.twin_classes():
+        rs = sorted(row_of[f] for f in grp)
+        top, bot = rs[0], rs[-1] + 1
+        ax.add_patch(Rectangle((-0.02, top + 0.10), len(cols) + 0.04,
+                               bot - top - 0.20, fill=False, edgecolor=CRITICAL,
+                               linewidth=0.9, zorder=4))
+        label = "nested" if "FM_axisweight" in grp else "identical"
+        ax.annotate(label, xy=(len(cols) + 0.15, (top + bot) / 2), va="center",
+                    ha="left", fontsize=6.5, color=CRITICAL)
+
+    for x in (3, 8):
+        ax.plot([x, x], [-0.1, len(rows) + 0.1], color="white", lw=2.0, zorder=3)
+    ax.set_xlim(-0.1, len(cols) + 1.9)
+    ax.set_ylim(len(rows) + 0.1, -1.25)
+    ax.set_xticks(np.arange(len(cols)) + 0.5)
+    ax.set_xticklabels(col_labels, fontsize=6.5, rotation=90)
+    ax.xaxis.tick_top()
+    ax.set_yticks(np.arange(len(rows)) + 0.5)
+    ax.set_yticklabels([n for _, n in rows], fontsize=7)
+    ax.tick_params(length=0, pad=1.5)
+    for side in ("top", "right", "bottom", "left"):
+        ax.spines[side].set_visible(False)
+    for x, lab in ((1.5, "scope"), (5.5, "signal families"), (9.0, "phase")):
+        ax.annotate(lab, xy=(x, len(rows) + 0.75), ha="center", va="center",
+                    fontsize=6.8, color=INK_2, annotation_clip=False)
+    save(fig, "fig_signatures_column.pdf")
 
 
 # ===========================================================================
@@ -258,7 +282,7 @@ def fig_signatures():
         "FM_axisweight": "repaired",
         "FM_collision_card": "inconclusive",
         "FM_misgrip": "undetermined",
-        "FM_miscommutation": "hardware gap",
+        "FM_miscommutation": "untestable",
     }
     row_of = {fid: i for i, fid in enumerate(ordered)}
     for cluster in twins:
@@ -354,7 +378,7 @@ def fig_protocol():
         if adopt is not None:
             r_ad, g_ad = adopt
             txt = ("adopted → adopted" if (r_ad and g_ad)
-                   else "adopted → REJECTED")
+                   else "adopted → not adopted")
             col = INK_2 if (r_ad and g_ad) else CRITICAL
             weight = "normal" if (r_ad and g_ad) else "bold"
             ax.annotate(txt, (1.005, y), xycoords=("axes fraction", "data"),
@@ -605,7 +629,8 @@ def fig_label_budget():
     save(fig, "fig_label_budget.pdf")
 
 
-FIGURES = {f.__name__: f for f in (fig_teaser, fig_signatures, fig_protocol,
+FIGURES = {f.__name__: f for f in (fig_tiebreak, fig_signatures_column,
+                                   fig_signatures, fig_protocol,
                                    fig_certificates, fig_power, fig_granularity,
                                    fig_label_budget)}
 

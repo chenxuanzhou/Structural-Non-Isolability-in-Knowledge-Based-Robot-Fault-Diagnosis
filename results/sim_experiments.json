@@ -188,5 +188,5 @@
       "acc_sd": 0.0
     }
   ],
-  "cost_class_verdict": "temperature is genuinely required: no cheaper representation reaches it, so the HARDWARE cost class holds."
+  "cost_class_verdict": "the deployed representation already separates the simulated pair (0.970 against 1.000 with temperature), so in this cell no added channel is needed."
 }
