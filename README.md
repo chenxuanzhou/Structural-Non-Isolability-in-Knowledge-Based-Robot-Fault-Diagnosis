@@ -24,9 +24,10 @@ in which every fault instantiation is wholly in the training half or wholly in
 the test half.
 
 **1. Ties.** In 514 of 755 anomalous cycles two or three failure modes share the
-top score. Every tie lies inside one of four groups of modes whose columns in
-the fault signature matrix (joint scope, signal families, phase hint) are
-identical or, in the load-torque group, nested. 498 of the ties are in the
+top score. Every tie lies inside one of four groups of modes that declare the
+same joint scope and signal families; within a group the columns of the fault
+signature matrix (with the phase hint) are identical or, in the load-torque
+group, nested. 498 of the ties are in the
 load-torque group. The knowledge base also declares the direction and time
 course of each mode's torque deviation, which the deployed score does not use;
 adding them removes 513 of the 514 ties but lowers top-1 on all five splits.
