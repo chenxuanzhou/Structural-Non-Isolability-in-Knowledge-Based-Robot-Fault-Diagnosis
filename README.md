@@ -159,12 +159,23 @@ python make_figures.py fig_tiebreak fig_signatures_column # the two the paper us
 
 The other figures in `figures/` belong to the long version.
 
-To build the paper, put IFAC's official `ifacconf.cls` (from the
+To build the paper, put IFAC's official `ifacconf.cls` (v1.3, from the
+`ifacconf_latex` kit on the
 [IFAC author guide](https://www.ifac-control.org/conferences/author-guide)) next
-to `safeprocess2027_final.tex` and run `pdflatex` twice. Without it,
-`tools/ifacconf_local.cls` can stand in: copy it next to the `.tex` as
-`ifacconf.cls`. It is a local approximation for compiling and page-counting
-only, not for submission. The committed PDF was built with it: six pages.
+to `safeprocess2027_final.tex`. Its licence does not allow redistribution, so it
+is not in this repository. The references are in `safeprocess2027.bib` and are
+formatted by the kit's `ifacconf.bst` (LaTeX Project Public License), which is
+included. Then run:
+
+```bash
+pdflatex safeprocess2027_final
+bibtex   safeprocess2027_final
+pdflatex safeprocess2027_final
+pdflatex safeprocess2027_final
+```
+
+The committed PDF was built this way with the official class: six A4 pages, all
+fonts embedded, no Type 3 fonts.
 
 ---
 
@@ -172,6 +183,7 @@ only, not for submission. The committed PDF was built with it: six pages.
 
 ```
 safeprocess2027_final.tex / .pdf   the paper
+safeprocess2027.bib, ifacconf.bst   its references and IFAC's bibliography style
 make_figures.py    rebuilds figures/ from results/
 pipeline/          the diagnosis pipeline and every evaluation script
   line_kg.py             FMEA knowledge graph, 14 failure modes, retrieval scoring
@@ -188,7 +200,6 @@ mvtflow/           normalizing-flow detector (needs the parquet to train)
 data/              derived evidence records; see Data above
 results/           every reported number, as JSON
 figures/           vector PDFs, rebuilt by make_figures.py
-tools/             ifacconf_local.cls, a stand-in for IFAC's class
 voraus-AD_data_source_and_licence_record.pdf   provenance and licence record for the dataset
 ```
 

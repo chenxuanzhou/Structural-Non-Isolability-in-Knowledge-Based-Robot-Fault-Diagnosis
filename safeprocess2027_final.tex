@@ -6,23 +6,28 @@
 % IFAC uses SINGLE-BLIND review: author names and affiliations stay on the paper.
 % Do not anonymise.
 %
-% BUILD
+% BUILD (official IFAC class)
+%   pdflatex safeprocess2027_final
+%   bibtex   safeprocess2027_final
 %   pdflatex safeprocess2027_final && pdflatex safeprocess2027_final
-%   Fig. 1 (figures/fig_tiebreak.pdf) and Fig. 2
-%   (figures/fig_signatures_column.pdf) are built by make_figures.py at the
-%   repository root.
+%   References are in safeprocess2027.bib, formatted by ifacconf.bst (IFAC kit,
+%   LaTeX Project Public License, shipped next to this file).  Fig. 1
+%   (figures/fig_tiebreak.pdf) and Fig. 2 (figures/fig_signatures_column.pdf)
+%   are built by make_figures.py at the repository root.
 %
 % CLASS FILE
-%   ifacconf.cls ships from IFAC, not from CTAN/TeX Live:
+%   safeprocess2027_final.pdf is built with the official ifacconf.cls v1.3
+%   (2022/02/11) from IFAC's ifacconf_latex kit:
 %     https://www.ifac-control.org/conferences/author-guide
-%   It is not in this repository.  tools/ifacconf_local.cls is a LOCAL
-%   APPROXIMATION written only so the draft can be compiled and page-counted.
-%   To build, copy it next to this file as ifacconf.cls, or drop in the
-%   official class (this source needs no other change).  Verify the page count
-%   again with the official class -- the official geometry will differ.
+%   Its licence forbids redistribution, so it is not in this repository; put it
+%   next to this file before building.
+%   Template rules followed here: abstract of 50--100 words, keywords from the
+%   IFAC list, no change to margins or layout, no page numbers, generative-AI
+%   declaration before the references.
 %
 % LENGTH
-%   6 pages final, up to 8 for review.  Cut list if over, in this order:
+%   6 pages final, up to 8 for review.  With the official class the text ends
+%   about half a column before the end of page 6.  Cut list if over, in order:
 %   Table 2's permuted column, the Sec. 8.1 foam-collision sentence, the
 %   Sec. 4 authoring-sensitivity paragraph's 315-tie sentence.
 %
@@ -52,8 +57,12 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{graphicx}
+\usepackage{natbib}        % required by the IFAC template
 \usepackage{booktabs}
-\usepackage[hidelinks]{hyperref}
+\usepackage{array}         % ragged-right verdict column in Table 2
+% hyperref is not loaded: with ifacconf.cls v1.3 it breaks unnumbered section
+% headings such as the AI declaration ("Illegal unit of measure", a known issue
+% listed in the kit's CHANGELOG).
 % the repository URL is long and lives in a narrow column; let it break anywhere
 \usepackage{xurl}
 \graphicspath{{figures/}}
@@ -74,24 +83,15 @@ University of Technology Sydney, Ultimo, NSW 2007, Australia
 (e-mail: chenxuan.zhou@student.uts.edu.au, jie.liang@uts.edu.au).}
 
 \begin{abstract}
-On the public voraus-AD robot benchmark we evaluate a diagnosis layer that
-scores the 14 failure modes of a hand-written FMEA knowledge base against
-per-signal deviations from normal operation. In 514 of 755 anomalous cycles two
-or three modes share the top score, always inside one of four groups of modes
-that declare the same joint scope and signal families. Over the 12 orders of the
-tied modes, top-1 accuracy ranges from 0.119 to 0.200; a prevalence prior that
-uses no signals scores 0.187 and is better on top-3, top-5, mean reciprocal rank
-and group accuracy under every order. We therefore report the non-isolable group
-and search for a statistic of the existing signals that separates it. For the
-load-torque group the selected statistics, most often the sign of the deviation,
-separate the members (held-out accuracy 0.840, without them 0.562); for the
-other groups the verdicts are `not adopted', `undetermined' and `untestable'.
-The search must be validated on unseen fault instantiations: under a random
-split over cycles it adopts a statistic for the collision group;
-leave-one-setting-out validation adopts it on 4 of 9 folds, with held-out
-accuracy below the majority rate. A flat classifier over the same features is
-more accurate than retrieval followed by a within-group classifier once 8
-labelled cycles are available.
+On the voraus-AD benchmark, a diagnosis layer scores 14 failure modes of a
+hand-written FMEA knowledge base against per-signal deviations. In 514 of 755
+anomalous cycles the top score is tied within one of four mode groups that
+declare the same joints and signal families. Top-1 accuracy ranges from 0.119 to
+0.200 over tie-break orders; a prevalence prior scores 0.187. We report the
+non-isolable group and search for statistics separating it. For the load-torque
+group they raise held-out within-group accuracy from 0.562 to 0.840. Under a
+random split over cycles, the search adopts collision statistics that
+leave-one-setting-out validation does not.
 \end{abstract}
 
 % Taken from the SAFEPROCESS official keyword list -- do not substitute
@@ -110,8 +110,8 @@ Robotics.
 %==============================================================================
 
 An anomaly detector on robot telemetry can report that a cycle is abnormal, but
-not why. A common way to name likely causes is a line-specific FMEA knowledge
-base: each failure mode declares the joints it affects and the signal families
+not why. A common way to name likely causes is a line-specific knowledge base
+built from a failure mode and effects analysis (FMEA): each failure mode declares the joints it affects and the signal families
 in which it shows, a retrieval function scores the modes against the per-signal
 deviations of the cycle, and the maintenance technician receives a ranked list
 of candidate causes.
@@ -183,8 +183,9 @@ benchmarks \citep{damadics}, extended to graded distinguishability under noise
 \citep{jung}, and related to spectrum-based fault localisation in software
 \citep{tm_wotawa}.
 
-When the signatures do not separate the faults, both FDI signature matching and
-consistency-based diagnosis in the DX tradition \citep{reiter,dekleer} return a
+When the signatures do not separate the faults, both signature matching in
+fault detection and isolation (FDI) and consistency-based diagnosis in the
+artificial-intelligence (DX) tradition \citep{reiter,dekleer} return a
 set of candidates; for a complete set of tests and without exoneration the two
 sets coincide \citep{cordier,tm_survey}. A ranked list that breaks ties does
 not report this set. We report instead the non-isolable group of the top-ranked
@@ -441,7 +442,7 @@ and Permuted are grouped. $^{\dag}$One carton instantiation in each training hal
 search can run; the value is for the set of all free dimensions.}
 \label{tab:cert}
 \small\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcccccp{34mm}}
+\begin{tabular}{lccccc>{\raggedright\arraybackslash}p{46mm}}
 \toprule
 Group & Ungrouped & Grouped & Deployed & Majority & Permuted & Verdict \\
 \midrule
@@ -616,123 +617,16 @@ instantiations, not because it removes ties.
 
 \emph{Code and data.} Evidence records, certificates, all analyses and the
 producing scripts are archived at
-\mbox{\url{https://doi.org/10.5281/zenodo.22089173}}.
+\url{https://doi.org/10.5281/zenodo.22089173}.
 
-%==============================================================================
-\begin{thebibliography}{99}
-\small
-\setlength{\itemsep}{0pt}
-\setlength{\parsep}{0pt}
-\linespread{0.96}\selectfont
+\section*{Declaration of generative AI and AI-assisted technologies in the
+writing process}
+During the preparation of this work the authors used Claude (Anthropic) in
+order to revise the wording of the manuscript, check the reported numbers
+against the analysis outputs and write parts of the analysis code. After using
+this tool, the authors reviewed and edited the content as needed and take full
+responsibility for the content of the publication.
 
-% ---------------------------------------------------------------------------
-% 17 entries.  Every one is cited in the text -- no padding.  All bibliographic
-% details (volume, issue, pages, DOI) were checked against the publisher record
-% or the authors' own publication lists.  Do not add an entry you have not
-% opened yourself.
-% CHECK: hendriks, jung18 and mcsherry were added in the October revision; their
-% details match the publisher records found online, but open each before
-% submission:  hendriks doi:10.1016/j.ymssp.2021.108732;
-% jung18 doi:10.1016/j.conengprac.2018.08.013;
-% mcsherry doi:10.1007/978-3-540-78646-7_38.
-% ---------------------------------------------------------------------------
-
-\bibitem[Blanke et al.(2016)]{blanke}
-Blanke, M., Kinnaert, M., Lunze, J., and Staroswiecki, M. (2016).
-\emph{Diagnosis and Fault-Tolerant Control}, 3rd ed. Springer, Berlin.
-
-\bibitem[Brockmann et al.(2024)]{voraus}
-Brockmann, J.T., Rudolph, M., Rosenhahn, B., and Wandt, B. (2024).
-The voraus-AD dataset for anomaly detection in robot applications.
-\emph{IEEE Transactions on Robotics}, 40, 438--451.
-
-\bibitem[Cordier et al.(2004)]{cordier}
-Cordier, M.-O., Dague, P., L\'{e}vy, F., Montmain, J., Staroswiecki, M., and
-Trav\'{e}-Massuy\`{e}s, L. (2004).
-Conflicts versus analytical redundancy relations: a comparative analysis of the
-model based diagnosis approach from the artificial intelligence and automatic
-control perspectives.
-\emph{IEEE Transactions on Systems, Man, and Cybernetics --- Part B}, 34(5),
-2163--2177.
-
-\bibitem[de Kleer and Williams(1987)]{dekleer}
-de Kleer, J. and Williams, B.C. (1987).
-Diagnosing multiple faults.
-\emph{Artificial Intelligence}, 32(1), 97--130.
-
-\bibitem[D\"{u}steg\"{o}r et al.(2006)]{damadics}
-D\"{u}steg\"{o}r, D., Frisk, E., Cocquempot, V., Krysander, M., and
-Staroswiecki, M. (2006).
-Structural analysis of fault isolability in the DAMADICS benchmark.
-\emph{Control Engineering Practice}, 14(6), 597--608.
-
-\bibitem[Frisk et al.(2009)]{frisk}
-Frisk, E., Krysander, M., and \r{A}slund, J. (2009).
-Sensor placement for fault isolation in linear differential-algebraic systems.
-\emph{Automatica}, 45(2), 364--371.
-
-\bibitem[Hendriks et al.(2022)]{hendriks}
-Hendriks, J., Dumond, P., and Knox, D. (2022).
-Towards better benchmarking using the CWRU bearing fault dataset.
-\emph{Mechanical Systems and Signal Processing}, 169, 108732.
-
-\bibitem[Jung et al.(2015)]{jung}
-Jung, D., Frisk, E., and Krysander, M. (2015).
-Quantitative isolability analysis of different fault modes.
-\emph{IFAC-PapersOnLine}, 48(21), 1275--1282.
-
-\bibitem[Jung et al.(2018)]{jung18}
-Jung, D., Ng, K.Y., Frisk, E., and Krysander, M. (2018).
-Combining model-based diagnosis and data-driven anomaly classifiers for fault
-isolation. \emph{Control Engineering Practice}, 80, 146--156.
-
-\bibitem[Kapoor and Narayanan(2023)]{kapoor}
-Kapoor, S. and Narayanan, A. (2023).
-Leakage and the reproducibility crisis in machine-learning-based science.
-\emph{Patterns}, 4(9), 100804.
-
-\bibitem[Krysander and Frisk(2008)]{krysander}
-Krysander, M. and Frisk, E. (2008).
-Sensor placement for fault diagnosis.
-\emph{IEEE Transactions on Systems, Man, and Cybernetics --- Part A}, 38(6),
-1398--1410.
-
-\bibitem[Krysander et al.(2008)]{krysander_mso}
-Krysander, M., \r{A}slund, J., and Nyberg, M. (2008).
-An efficient algorithm for finding minimal overconstrained subsystems for
-model-based diagnosis.
-\emph{IEEE Transactions on Systems, Man, and Cybernetics --- Part A}, 38(1),
-197--206.
-
-\bibitem[Liao et al.(2025)]{aei_kg}
-Liao, X., Chen, C., Wang, Z., Liu, Y., Wang, T., and Cheng, L. (2025).
-Large language model assisted fine-grained knowledge graph construction for
-robotic fault diagnosis.
-\emph{Advanced Engineering Informatics}, 65, 103134.
-
-\bibitem[McSherry and Najork(2008)]{mcsherry}
-McSherry, F. and Najork, M. (2008).
-Computing information retrieval performance measures efficiently in the
-presence of tied scores. In \emph{Advances in Information Retrieval (ECIR
-2008)}, LNCS 4956, 414--421. Springer.
-
-\bibitem[Reiter(1987)]{reiter}
-Reiter, R. (1987).
-A theory of diagnosis from first principles.
-\emph{Artificial Intelligence}, 32(1), 57--95.
-
-\bibitem[Trav\'{e}-Massuy\`{e}s(2014)]{tm_survey}
-Trav\'{e}-Massuy\`{e}s, L. (2014).
-Bridging control and artificial intelligence theories for diagnosis: a survey.
-\emph{Engineering Applications of Artificial Intelligence}, 27, 1--16.
-
-\bibitem[Trav\'{e}-Massuy\`{e}s and Wotawa(2024)]{tm_wotawa}
-Trav\'{e}-Massuy\`{e}s, L. and Wotawa, F. (2024).
-Bridging hardware and software diagnosis: leveraging fault signature matrix and
-spectrum-based fault localization similarities.
-In \emph{35th International Conference on Principles of Diagnosis and Resilient
-Systems (DX 2024)}, OASIcs vol. 125, 5:1--5:15.
-
-\end{thebibliography}
+\bibliography{safeprocess2027}
 
 \end{document}

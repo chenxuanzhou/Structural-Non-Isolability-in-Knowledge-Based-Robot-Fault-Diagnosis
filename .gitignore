@@ -24,3 +24,13 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# --- IFAC class: its licence forbids redistribution; get it from the IFAC kit --
+ifacconf.cls
+
+# --- LaTeX build products -------------------------------------------------------
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
