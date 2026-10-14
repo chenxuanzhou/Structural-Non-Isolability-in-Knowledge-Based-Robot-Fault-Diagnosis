@@ -28,13 +28,16 @@
 %
 % PROVENANCE
 %   Every number here traces to results/*.json, except in Sec. 3, where the
-%   dataset counts (2122 / 755 / 1367 / 948 / 419 cycles) are voraus-AD's own.
+%   dataset counts (2122 / 755 / 1367 / 948 / 419 cycles) are voraus-AD's own
+%   and the setting counts (72 settings, 4 to 20 cycles each, median 10, three
+%   single-setting categories) come from data/records_cache.json.
 %   Main sources:
 %   baselines.json (Table 1, Sec. 5: prior_vs_retrieval, tie_robust,
 %   tiebreak_exact, balanced_recall_expected, set_valued, constant_router),
 %   distinguishability_results.json (Sec. 4), repair_results.json (Table 2,
 %   Sec. 6), certificate_checks.json (Secs. 4, 6 and 8), protocol_check.json
-%   (Sec. 7), held_out_seeds.json (Sec. 3).
+%   and repair_results.json leakage_check (Sec. 7), held_out_seeds.json
+%   (Sec. 3).
 %==============================================================================
 \documentclass{ifacconf}
 
@@ -78,20 +81,20 @@ On the public voraus-AD robot benchmark we evaluate a diagnosis layer that
 scores the 14 failure modes of a hand-written FMEA knowledge base against
 per-signal deviations from normal operation. In 514 of 755 anomalous cycles two
 or three modes share the top score, always inside one of four groups of modes
-that declare the same joint scope and signal families. Over the 12
-orders of the tied modes, top-1 accuracy ranges from 0.119 to 0.200; a
-prevalence prior that uses no signals scores 0.187 and is better on top-3,
-top-5, mean reciprocal rank and group accuracy under every order. We therefore
-report the non-isolable group and search for a statistic of the existing signals
-that separates it. For the load-torque group the selected statistics, most often
-the sign of the deviation, separate the members (held-out accuracy 0.840 against
-0.562); for the other groups the verdicts are not adopted, undetermined and
-untestable. The search must be validated on unseen fault instantiations: under a
-random split over cycles it adopts a statistic for the collision group that
-leave-one-setting-out validation adopts on only 4 of 9 folds, with held-out
+that declare the same joint scope and signal families. Over the 12 orders of the
+tied modes, top-1 accuracy ranges from 0.119 to 0.200; a prevalence prior that
+uses no signals scores 0.187 and is better on top-3, top-5, mean reciprocal rank
+and group accuracy under every order. We therefore report the non-isolable group
+and search for a statistic of the existing signals that separates it. For the
+load-torque group the selected statistics, most often the sign of the deviation,
+separate the members (held-out accuracy 0.840, without them 0.562); for the
+other groups the verdicts are `not adopted', `undetermined' and `untestable'.
+The search must be validated on unseen fault instantiations: under a random
+split over cycles it adopts a statistic for the collision group;
+leave-one-setting-out validation adopts it on 4 of 9 folds, with held-out
 accuracy below the majority rate. A flat classifier over the same features is
-more accurate than retrieval followed by the repair once 8 labelled cycles are
-available.
+more accurate than retrieval followed by a within-group classifier once 8
+labelled cycles are available.
 \end{abstract}
 
 % Taken from the SAFEPROCESS official keyword list -- do not substitute
@@ -119,8 +122,8 @@ of candidate causes.
 This paper measures which failure modes such a list can isolate on the public
 voraus-AD benchmark \citep{voraus}. The declarations of the knowledge base form
 a fault signature matrix in the sense of \citet{blanke}. In this matrix nine of
-the fourteen failure modes form four groups with the same declared joints and
-signal families: in three groups the columns are identical, and in the fourth
+the 14 failure modes form four groups with the same declared joints and
+signal families: in three groups the columns are identical, and in the fourth,
 one column contains the other two. The scoring
 function is continuous, but in 514 of 755 anomalies two or three modes of one
 group share the highest score, and the reported answer then depends only on
@@ -128,24 +131,24 @@ the order in which the modes are listed (Fig.~\ref{fig:tiebreak}).
 
 % CHECK: if the earlier uniform-chance evaluation was published, cite it in the
 % next sentence instead of "During development".
-Two further findings do not depend on this knowledge base. The first concerns
-the reference for judging accuracy. During development we compared top-1
-accuracy with uniform chance. When fault frequencies are skewed, the appropriate
-reference is a prevalence prior, which ranks the modes by their frequency in the
+Two further findings are about the evaluation. The first concerns the reference
+for judging accuracy. During development we compared top-1 accuracy with uniform
+chance. When fault frequencies are skewed, the appropriate reference is a
+prevalence prior, which ranks the modes and groups by their frequency in the
 training data and gives this ranking for every cycle. On voraus-AD the prior is
 better than the retrieval on top-3, top-5, mean reciprocal rank (MRR) and group
 accuracy under every tie-break order (Sec.~\ref{sec:baselines}).
 
 The second concerns validation. The \texttt{setting} field of voraus-AD
 identifies a physical fault instantiation, for example one added weight or one
-placement of a collision object, and each instantiation is repeated over several
+placement of a collision object, and each instantiation is repeated for 4 to 20
 cycles. A random split over cycles puts cycles of the same instantiation into
 both training and test data. For each non-isolable group we search for a
-\emph{repair}, a statistic of the existing signals that separates the members,
-and the type of split changes which repair is adopted, not only the reported
-accuracy (Sec.~\ref{sec:protocol}). Leakage of this kind is known in
+\emph{repair}, a statistic of the existing signals that separates the members.
+The type of split changes the reported accuracy and also which repair is
+adopted (Sec.~\ref{sec:protocol}). Leakage of this kind is known in
 machine-learning-based science \citep{kapoor} and in fault-diagnosis benchmarks
-\citep{hendriks}; here it enters through the inner validation that selects the
+\citep{hendriks}; here it occurs in the inner validation that selects the
 repair. We test both findings on voraus-AD only.
 
 \begin{figure}[t]
@@ -167,7 +170,7 @@ search over predefined statistics of the existing signals for one that separates
 a group, reported as a certificate with held-out evidence, controls and a cost
 class. (iv) Evidence that grouping the validation by fault instantiation changes
 which repair is adopted. (v) The number of labels from which a flat classifier
-is more accurate than retrieval followed by the repair.
+is more accurate than retrieval followed by a within-group classifier.
 
 %==============================================================================
 \section{Fault signatures and isolability}
@@ -182,7 +185,7 @@ their columns coincide. Without it isolability is directional: a mode whose
 column is contained in another mode's column cannot be isolated from that mode
 \citep{krysander,cordier}. The analysis has been applied to public process
 benchmarks \citep{damadics}, extended to graded distinguishability under noise
-\citep{jung}, and related to spectrum-based fault localization in software
+\citep{jung}, and related to spectrum-based fault localisation in software
 \citep{tm_wotawa}.
 
 When the signatures do not separate the faults, both FDI signature matching and
@@ -210,13 +213,12 @@ guarantee.
 %==============================================================================
 
 \emph{Benchmark.} voraus-AD \citep{voraus} contains machine data from a six-axis
-robot on a pick-and-place task, with 12 anomaly categories physically induced.
+robot on a pick-and-place task, with 12 physically induced anomaly categories.
 We use the 100\,Hz release: 2122 cycles, of which 755 are anomalous and 1367
-normal. The official training data are the 948 normal cycles recorded under
-\texttt{setting}~$=72$; the remaining 419 normal cycles are held out. The
-anomalous cycles fall under 72 \texttt{setting} values, each identifying one
-physical fault instantiation repeated for 4 to 20 cycles (median 10). Three
-categories have a single instantiation.
+normal. The official training data are 948 normal cycles; the remaining 419
+normal cycles are held out. The anomalous cycles fall under 72 \texttt{setting}
+values, each identifying one physical fault instantiation repeated for 4 to 20
+cycles (median 10). Three categories have a single instantiation.
 
 \emph{Evidence record.} Diagnosis is evaluated on all 755 labelled anomalous
 cycles, that is, assuming perfect detection; in deployment an anomaly detector
@@ -231,7 +233,7 @@ that peak.
 
 \emph{Knowledge base and retrieval.} The knowledge base is an FMEA encoded as a
 graph. \citet{aei_kg} automate the construction of such graphs for robots; ours
-was written by hand by the authors from the voraus-AD anomaly descriptions and
+was hand-written by the authors from the voraus-AD anomaly descriptions and
 has not been reviewed independently. It declares 14 failure modes: 12 map one to
 one to the benchmark's categories, and backlash and over-temperature have no
 instances. Each mode declares its joint scope, its signal families, a cycle-phase
@@ -243,11 +245,11 @@ of signal families, $E$ is the mean over the record's five channels of
 $\log(14/n)\log(1+|z|)$, taken as 0 outside the families and joints of $m$,
 with $n$ the number of modes that declare that family and joint,
 $P$ is 1 if the record's phase agrees with the phase hint of $m$, and $C$ is the
-fraction of the families of $m$ that are present. The scoring form and weights
+fraction of the families of $m$ that $E$ counts. The scoring form and weights
 were settled during development on these 755 cycles. Choosing the three weights
 again on each training half of the protocol below gives a different choice on
-every split and no improvement on the test halves (MRR 0.362 against 0.366,
-top-5 0.600 against 0.651).
+every split and no gain on the test halves in MRR (0.362 against 0.366) or
+top-5 (0.600 against 0.651).
 
 \emph{Protocol.} Unless stated otherwise, results are means over five
 leave-setting-out (grouped) splits: each \texttt{setting} is assigned wholly to
@@ -270,15 +272,16 @@ another mode. They form four groups: three load-torque modes (axis weight, lost
 can, varying weight), two distal collisions (foam, carton), two gripping faults
 (misgrip, invalid grip) and a commutation/over-temperature pair. Every term of
 the score except phase agreement depends only on scope, families and the record.
-The score penalises extra families and the scope `any', which has the effect of
-the exoneration assumption for these rows, but it gives the phase hint `any'
-credit in each of the phases pick, place and transfer. In the collision, gripping and commutation groups the
-phase hints are also equal, so the columns are identical and the members always
-receive the same score. In the load-torque group the hints differ (axis weight:
-any phase; lost can: transfer; varying weight: grip), so the column of axis
-weight contains the other two. Neither payload mode can then be isolated from
-axis weight, and because a record has one phase, axis weight always has the
-same score as at least one of them.
+The score penalises extra families and the scope `any', which corresponds to the
+exoneration assumption for these rows, but it gives the phase hint `any' credit
+in every phase: grip (pick or place) and transfer. In the collision, gripping
+and commutation groups the phase hints are also equal, so the columns are
+identical and the members always receive the same score. In the load-torque
+group the hints differ (axis weight: any phase; lost can: transfer; varying
+weight: grip), so the column of axis weight contains the other two. Neither
+payload mode can then be isolated from axis weight, and because a record has one
+phase, axis weight ties with one or both of them, so no member of the group ever
+ranks first alone.
 
 \begin{figure}[t]
 \centering
@@ -294,14 +297,14 @@ current $I$; a phase hint `any' fills both phase cells.}
 In 514 of the 755 anomalies (68.1\%) the top score is shared by two or three
 modes, and every tie lies inside one group. Of these ties, 498 are in the
 load-torque group: axis weight with lost can in 238 cycles, axis weight with
-varying weight in 199, and all three in 61 cycles whose peak lies outside
-these phases. The other 16 are commutation-pair ties. The count is 514 at each of
-seven phase weights between 0 and 3; the weight changes only which members tie.
-The collision and gripping groups never reach rank one, because they are
-declared on the distal joints J4--J6, while the dominant joint, chosen by
-absolute torque deviation, is J1, J2 or J3 in every cycle.
+varying weight in 199, and all three in 61 cycles whose peak lies outside the
+pick, place and transfer phases. The other 16 are commutation-pair ties. The
+count is 514 at each of seven phase weights between 0 and 3; the weight changes
+only which members tie. The collision and gripping groups never reach rank one,
+because they are declared on the distal joints J4--J6, while the dominant joint,
+chosen by absolute torque deviation, is J1, J2 or J3 in every cycle.
 
-These numbers describe this knowledge base, not the robot. Declaring the phase
+These counts depend on how the knowledge base is written. Declaring the phase
 of axis weight as transfer instead of any would leave 315 ties. The declared
 direction and time course of the torque deviation, which the score does not use,
 differ within every group except the collision pair. Adding them to the score
@@ -319,7 +322,8 @@ and balanced recall (Sec.~\ref{sec:prior}) on four, from 0.105 to 0.100.
 Against uniform chance, 0.071 over 14 modes, the deployed retrieval has a top-1
 lift of 2.37$\times$. Uniform chance is the wrong reference when categories
 differ in frequency: axis weight contributes 156 cycles and cable entanglement
-10. The prevalence prior ranks the modes by their frequency in the training half
+10. The prevalence prior ranks the modes and groups by their frequency in the
+training half
 and gives this ranking for every cycle.
 
 \begin{table}[t]
@@ -329,7 +333,7 @@ the predicted mode's group; for the prior, the most frequent group of the
 training half. Balanced: mean per-category recall, with tied modes sharing the
 credit; a constant scores $1/K$, with $K$ the 10 or 11 categories in a test
 half. In parentheses: top-1 with tied modes sharing the credit. Two-stage:
-Sec.~\ref{sec:repair}; flat classifier: Sec.~\ref{sec:neg}.}
+fixed \{sign, step\}, Sec.~\ref{sec:repair}; flat classifier: Sec.~\ref{sec:neg}.}
 \label{tab:baselines}
 \small\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{lcccc}
@@ -346,23 +350,23 @@ flat classifier      & $0.525$ & --- & $0.574$ & $0.397$ \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:baselines} compares the two. On top-3, top-5, MRR and group
-accuracy the prior is ahead under every tie-break order of
+Table~\ref{tab:baselines} compares the prior with the retrieval. On top-3,
+top-5, MRR and group accuracy the prior is ahead under every tie-break order of
 Sec.~\ref{sec:tiebreak}; for top-3, MRR and group accuracy it is ahead on all
 five splits. Top-1 depends on the order. Under the declared order the retrieval
-is lower by 0.018 and is behind on four of five splits; two of the twelve orders
-put it at or above the prior. Breaking ties by training-half frequency, which
-uses only the information the prior uses, gives 0.200, above the prior's 0.187.
-Group accuracy is also lower for the retrieval: always naming the most frequent
-group of the training half, which is load torque on every split, scores 0.401
-against 0.342.
+is lower by 0.018 and is behind on four of five splits; two of the 12 orders put
+it at or above the prior. Breaking ties by training-half frequency, which uses
+only the information the prior uses, gives 0.200, above the prior's 0.187. Group
+accuracy is also lower for the retrieval: always naming the most frequent group
+of the training half, which is load torque on every split, scores 0.401 against
+0.342.
 
-Balanced recall, the mean of the per-category recalls, is a measure a constant
-predictor cannot raise: a constant scores $1/K$, which averages 0.095. The
+Balanced recall, the mean of the per-category recalls, is $1/K$ for a constant
+predictor, whatever the class frequencies; this averages 0.095. The
 retrieval's balanced recall also depends on the tie-break, so we let tied modes
 share the credit. The retrieval then reaches 0.105, above the constant on every
 split but by only 0.002 to 0.016, and one order puts it below. It adds little
-per-cycle information: its expected recall is zero on six of the twelve
+per-cycle information: its expected recall is zero on six of the 12
 categories. Comparisons between methods below use balanced recall in this form.
 
 \subsection{The tie-break interval}
@@ -390,8 +394,8 @@ The group of the top-ranked mode does not depend on the order: group accuracy is
 0.342 under every tie-break rule, because no tie crosses a group. As a set, the
 group contains the true mode in 34.2\% of cycles with 2.34 modes on average,
 while the same number of modes taken from the top of the prevalence list
-contains it in 38.5\%. Only on coverage averaged over categories is the group
-ahead (0.243 against 0.222). The knowledge base fixes the size of the answer
+contains it in 38.5\%. The group is ahead only on coverage averaged over
+categories (0.243 against 0.222). The knowledge base fixes the size of the answer
 set, and the group of the top-ranked mode is less often correct than a choice
 by frequency alone.
 
@@ -403,16 +407,16 @@ by frequency alone.
 For each non-isolable group we search for a repair: statistics of the existing
 signals with which a classifier, the \emph{resolver}, separates the members.
 
-\emph{Dimensions.} The classifiers in this section read statistics of $z$ over
-all 26 channels. The deployed representation is the peak magnitude $\max|z|$ of
-each channel (\emph{mag}). The candidate dimensions are further statistics of the
-same $z$: \emph{sign} (mean of $z$), \emph{step} (last third of the cycle minus
-first third), \emph{payload} (carrying minus empty actions), \emph{shape}
-(standard deviation of $z$) and \emph{unread} (peak, signed and payload
-statistics of two recorded channel families outside the 26). Each has a cost
-class: \emph{free} if computed from the 26 channels, \emph{pipeline} if it needs
-other recorded channels, \emph{hardware} if it needs a measurement the cell does
-not have. None of our dimensions is of hardware class.
+\emph{Dimensions.} The classifiers in this section read statistics of $z$. The
+retrieval uses only the peak magnitude $\max|z|$; \emph{mag} is this peak on
+each of the 26 channels. The candidate dimensions are further statistics of $z$:
+\emph{sign} (mean of $z$), \emph{step} (last third of the cycle minus first
+third), \emph{payload} (carrying minus empty actions), \emph{shape} (standard
+deviation of $z$) and \emph{unread} (peak, signed and payload statistics of two
+recorded channel families outside the 26). Each has a cost class: \emph{free} if
+computed from the 26 channels, \emph{pipeline} if it needs other recorded
+channels, \emph{hardware} if it needs a measurement the cell does not have. None
+of our dimensions is of hardware class.
 
 \emph{Search and certificate.} Every learned component is a standardised
 $\ell_2$ logistic regression ($C = 1$). Starting from mag, a greedy search adds
@@ -421,14 +425,14 @@ training half most exceeds $0.005$ times its cost factor (1 for free, 6 for
 pipeline), and stops when no gain does. The inner validation has $\min(4, n)$
 folds, with $n$ the fewest training settings of any member. The selected set is
 adopted on a split if its inner accuracy exceeds the share of the most frequent
-member in the training half by 0.05 and the accuracy of mag alone by 0.02; the repair is adopted for the group if
-this holds on a majority of splits. If a member has fewer than two
-instantiations in the training half, no search can run; we then evaluate the set
-of all free dimensions and do not adopt. The test half is used only for the
-certificate, which gives the dimensions, their cost class, the held-out accuracy
-within the group and three controls (accuracies in Table~\ref{tab:cert}).
-Varying the cost factor, the minimum gain and both margins does not change for
-which group a repair is adopted (repository).
+member in the training half by 0.05 and the accuracy of mag alone by 0.02; the
+repair is adopted for the group if this holds on a majority of splits. If a
+member has fewer than two instantiations in the training half, no search can
+run; we then evaluate the set of all free dimensions and do not adopt. The test
+half is used only for the certificate, which gives the dimensions, their cost
+class, the held-out accuracy within the group and three controls (accuracies in
+Table~\ref{tab:cert}). Varying the cost factor, the minimum gain and both
+margins does not change for which group a repair is adopted (repository).
 
 \begin{table*}[t]
 \centering
@@ -436,9 +440,9 @@ which group a repair is adopted (repository).
 its members. Grouped: leave-setting-out, the protocol we report. Ungrouped: the
 same code under a random split over cycles, including its inner validation.
 Deployed: the same classifier on the mag features alone. Majority: accuracy of
-always naming the training-half majority class. Permuted: the selected dimensions refitted on
-training labels shuffled over cycles. Deployed, Majority and Permuted are
-grouped. $^{\dag}$One carton instantiation in each training half, so no grouped
+always naming the training-half majority class. Permuted: the selected
+dimensions refitted on training labels shuffled over cycles. Deployed, Majority
+and Permuted are grouped. $^{\dag}$One carton instantiation in each training half, so no grouped
 search can run; the value is for the set of all free dimensions.}
 \label{tab:cert}
 \small\setlength{\tabcolsep}{4pt}
@@ -484,28 +488,30 @@ the search can run.
 split can test a repair.
 
 \textbf{Untestable.} voraus-AD contains no over-temperature fault, so no search
-is run. The knowledge base declares a separator for this pair, current against
-torque for the same motion.
+is run. The recommended check for over-temperature names a separator: current
+against torque for the same motion.
 
 End to end, the two-stage system (retrieval, then the resolver for cycles whose
-top group is load torque) raises top-1 in declared order from
-$0.169 \pm 0.018$ to $0.302 \pm 0.047$ with dimensions searched on each split. Fixing the dimensions
-that most splits chose, \{sign, step\}, gives $0.309 \pm 0.031$, balanced recall
-0.208 (from 0.105) and 0.869 within the group. That choice used all five splits;
-made from the other four splits each time, it gives 0.301 and 0.846, lower by
-0.008 and 0.023. The gain of the fixed configuration over the retrieval is
-positive on every split, from 0.126 to 0.154. It comes from the resolver, not
-from the routing: sending every cycle to the load-torque resolver gives 0.349
-and balanced recall 0.237, more than the two-stage system on all five splits.
+top group is load torque) raises top-1 in declared order from $0.169 \pm 0.018$
+to $0.302 \pm 0.047$ with dimensions searched on each split. Fixing the
+dimensions selected on most splits, \{sign, step\}, gives $0.309 \pm 0.031$,
+balanced recall 0.208 (from 0.105) and 0.869 within the group. That choice used
+all five splits; made from the other four splits each time, it gives 0.301 and
+0.846, lower by 0.008 and 0.023. The gain of the fixed configuration over the
+retrieval is positive on every split, from 0.126 to 0.154. It comes from the
+resolver, not from the routing: sending every cycle to the load-torque resolver
+gives 0.349 and balanced recall 0.237, more than the two-stage system on all
+five splits.
 
-On the test halves the load-torque group is the true answer for 40.1\% of
-cycles but is ranked first for 66.1\%. The retrieval routes 69\% of the load-torque cycles to the
-group, and 58\% of the cycles it routes there are other faults. Of the routed
-cycles the resolver labels 0.37 correctly (0.88 of the load-torque cycles among
-them), against 0.16 for the retrieval alone. Sending every cycle to the resolver
-also reaches the 31\% of load-torque cycles that the retrieval ranks elsewhere.
-No cycle reaches the collision or gripping group (Sec.~\ref{sec:twins}), so
-their certificates hold only for cycles that would reach it.
+On the test halves the load-torque group is the true answer for 40.1\% of cycles
+but is ranked first for 66.1\%. The retrieval routes 69\% of the load-torque
+cycles to the group, and 58\% of the cycles it routes there are other faults. Of
+the routed cycles the resolver labels 0.37 correctly (0.88 of the load-torque
+cycles among them), against 0.16 for the retrieval alone. Sending every cycle to
+the resolver also reaches the 31\% of load-torque cycles that the retrieval
+ranks elsewhere. No cycle reaches the collision or gripping group
+(Sec.~\ref{sec:twins}), so their certificates hold only for cycles that would
+reach them.
 
 %==============================================================================
 \section{Grouped and random validation}
@@ -528,18 +534,20 @@ cycles it exceeds the majority rate of the same split by only 3 of 47 cycles
 (0.830 against 0.766). Under the 50/50 leave-setting-out split no grouped search
 can run (Sec.~\ref{sec:repair}), so we compare the protocols with nine folds and
 the same search and rule. With folds stratified over cycles, the repair is
-adopted on 9 of 9 folds. With one setting held out per fold, it is adopted on 4
-of 9 folds, and its pooled held-out accuracy is 0.67 to 0.74 over ten inner
-seeds, below the majority rate of 0.766 for every seed.
+adopted on 9 of 9 folds. With one setting held out per fold
+(leave-one-setting-out), it is adopted on 4 of 9 folds, and its pooled held-out
+accuracy is 0.67 to 0.74 over ten inner seeds, below the majority rate of 0.766
+for every seed.
 
-A permuted-label control that shuffles labels over cycles does not detect the
-difference. Shuffled over cycles, the labels no longer follow the instantiation,
-so the permuted model cannot gain from recognising instantiations and the real
-model scores above it. Permuting labels over whole settings keeps each label
-tied to an instantiation, and this control does detect the difference: under
-the random split, between 5 and 10 of the 84 possible labellings reach the
-observed collision accuracy on each split ($p = 0.06$ to $0.12$), while none of
-300 labellings reaches the load-torque accuracy ($p < 0.004$). Any learned
+A permuted-label control that shuffles labels over cycles scores below the
+collision repair on all five splits (0.53 to 0.81 against 0.83), so this control
+passes the repair. Shuffled over cycles, the labels are no longer tied to the
+instantiation, so the permuted model cannot gain from recognising
+instantiations. Permuting labels over whole settings keeps each label tied to an
+instantiation. Under the random split, 5 to 10 of the 84 possible labellings
+then reach the observed collision accuracy on each split ($p = 0.06$ to $0.12$),
+so this control does not support the collision repair, while none of 300
+labellings reaches the load-torque accuracy ($p < 0.004$). Any learned
 comparison on this benchmark should therefore group by setting in the inner
 validation as well as in the outer split.
 
@@ -550,31 +558,30 @@ validation as well as in the outer split.
 
 \subsection{The flat classifier}
 
-A flat 12-way logistic regression over all dimensions reaches 0.525 top-1,
-0.397 balanced recall and 0.574 group accuracy under the same protocol, against
-0.309, 0.208 and 0.342 for the two-stage system. It recognises foam collision in
-0.506 of cases, where the retrieval and the prior both score zero, so the
-features contain evidence that the retrieval does not use. We tested whether the
+A flat 12-way logistic regression over all dimensions reaches 0.525 top-1, 0.397
+balanced recall and 0.574 group accuracy under the same protocol, against 0.309,
+0.208 and 0.342 for the two-stage system. It recognises foam collision in 0.506
+of cases, where the retrieval and the prior both score zero, so the features
+contain evidence that the retrieval does not use. We tested whether the
 knowledge base reduces the number of labels needed. Over 20 paired
 leave-setting-out splits, the classifier is trained on $k$ labelled cycles and
-the two-stage system on $k$ labelled cycles per group; only the load-torque group
-receives cycles, so only its labels are used. Both are scored on the 12-way
-task. At $k = 3$ the two-stage system, which is then close to the knowledge base
-alone, has the higher balanced recall on 14 of 20 splits. From $k = 8$ the
-classifier has the higher top-1 (0.225 against 0.208, 15 of 20 splits) and
-balanced recall (0.154 against 0.136, 15 of 20), and at $k = 320$ it reaches
+the two-stage system on $k$ labelled cycles per group; only the load-torque
+resolver receives test cycles, so only its labels are used. Both are scored on
+the 12-way task. At $k = 3$ the two-stage system, which is then close to the
+knowledge base alone, has the higher balanced recall on 14 of 20 splits. From $k
+= 8$ the classifier has the higher top-1 (0.225 against 0.208, 15 of 20 splits)
+and balanced recall (0.154 against 0.136, 15 of 20), and at $k = 320$ it reaches
 0.550 against 0.304. If the two-stage system receives the same labelled cycles
 as the classifier, it is behind at $k = 8$ on all 20 splits. With 8 or more
-labels the flat classifier is the better choice; the knowledge base is ahead
-only with almost no labels.
+labels the flat classifier is the better choice.
 
 \subsection{What would settle the open verdicts}
 
 Gripping needs at least two instantiations per mode for any grouped protocol,
 and voraus-AD has one. For collision the limit is our split: a 50/50 grouped
 split leaves $\lfloor N/2 \rfloor$ instantiations per mode for training, the
-grouped inner search needs two, and carton has $N = 3$. With one setting held
-out at a time the search can run, and the repair is still not adopted
+grouped inner search needs two, and carton has $N = 3$. Under
+leave-one-setting-out the search can run, and the repair is still not adopted
 (Sec.~\ref{sec:protocol}). Sweeps over $N$ on injected and simulated faults
 (repository) do not show how many instantiations a real pair needs, because
 there the deployed features already separate the pair.
@@ -583,8 +590,8 @@ there the deployed features already separate the pair.
 \section{Conclusion}
 %==============================================================================
 
-On voraus-AD the ranked list of an FMEA-based diagnosis layer is limited by its
-knowledge base before any data are scored: 68.1\% of anomalies tie at rank one,
+On voraus-AD the ranked list of an FMEA-based diagnosis layer is limited by the
+structure of its knowledge base: 68.1\% of anomalies tie at rank one,
 almost all in the load-torque group. A single top-1 figure then depends on the
 tie-break order more than on the split, and a prevalence prior is better on
 top-3, top-5, MRR and group accuracy under every order.
@@ -593,13 +600,13 @@ We therefore report the non-isolable group and search for a statistic that
 separates it, with held-out evidence, controls and a cost class. One of the
 three groups with benchmark instances is separated on unseen instantiations,
 mainly by the sign of the deviation, at no extra cost. This search must be
-validated by instantiation: a random split adopts a collision repair that
-leave-setting-out validation does not, and a permuted-label control over cycles
-does not detect it.
+validated by instantiation: under a random split it adopts a collision repair
+that leave-one-setting-out validation does not, and a permuted-label control
+over cycles passes it.
 
-Isolability can be checked before any data are seen, but a list without ties is
-not therefore more accurate: scoring the declared direction and time course
-removes the ties and lowers accuracy. With 8 or more labelled cycles a flat
+Isolability can be checked before any data are seen, but removing ties does not
+make the list more accurate: scoring the declared direction and time course
+removes them and lowers accuracy. With 8 or more labelled cycles a flat
 classifier over the same features is more accurate than the two-stage system. A
 change of representation should be adopted on evidence from unseen
 instantiations, not because it removes ties.
