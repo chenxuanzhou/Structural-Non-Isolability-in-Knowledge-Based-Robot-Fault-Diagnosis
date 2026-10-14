@@ -272,12 +272,14 @@ def balanced_recall(ctx, quick=False, verbose=True):
                    per_category={str(c): float(np.mean(v))
                                  for c, v in sorted(per_cat[n].items())})
            for n in mi}
-    out["uniform_macro"] = 1.0 / len(per_cat["retrieval"])
+    # a uniform draw over the 14 modes recalls each category with probability
+    # 1/14, the same chance model as uniform_chance's top-1
+    out["uniform_macro"] = 1.0 / len(ctx["fm_order"])
     out["constant_macro_bound"] = float(np.mean(const_bound))
     if verbose:
         print("\n2. BALANCED RECALL - mean per-category recall; a constant scores "
               f"1/K per split whatever the skew (K = categories in the test half; "
-              f"mean {out['constant_macro_bound']:.3f}), uniform over 12 scores "
+              f"mean {out['constant_macro_bound']:.3f}), uniform over 14 modes scores "
               f"{out['uniform_macro']:.3f}")
         print("                          micro top-1    macro recall")
         for n in ("prior (constant)", "retrieval", "two-stage", "flat control"):

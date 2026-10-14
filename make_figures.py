@@ -201,7 +201,7 @@ def _signatures_column(fmea, rows, cols, col_labels, on):
                 facecolor=BLUE_600 if on(fmea[fid], kind, v) else FILL_NEUTRAL_2,
                 edgecolor="white", linewidth=0.5, zorder=2))
 
-    # One bracket per group: identical columns, or covering (load torque).
+    # One bracket per group: identical columns, or nested ones (load torque).
     row_of = {fid: i for i, (fid, _) in enumerate(rows)}
     for grp in D.twin_classes():
         rs = sorted(row_of[f] for f in grp)
@@ -209,7 +209,7 @@ def _signatures_column(fmea, rows, cols, col_labels, on):
         ax.add_patch(Rectangle((-0.02, top + 0.10), len(cols) + 0.04,
                                bot - top - 0.20, fill=False, edgecolor=CRITICAL,
                                linewidth=0.9, zorder=4))
-        label = "covering" if "FM_axisweight" in grp else "identical"
+        label = "nested" if "FM_axisweight" in grp else "identical"
         ax.annotate(label, xy=(len(cols) + 0.15, (top + bot) / 2), va="center",
                     ha="left", fontsize=6.5, color=CRITICAL)
 

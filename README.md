@@ -1,7 +1,8 @@
 # Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis
 
-Code and derived data for a study of what an FMEA-based diagnosis layer for an
-industrial robot can and cannot decide, and which change of representation helps.
+Code and derived data for a study of which failure modes an FMEA-based
+diagnosis layer for an industrial robot can isolate, and which change of
+representation helps.
 
 The paper, *Structural Non-Isolability in Knowledge-Based Robot Fault Diagnosis:
 Tie-Break Intervals and Grouped Validation* (SAFEPROCESS 2027 manuscript), is
@@ -9,7 +10,7 @@ Tie-Break Intervals and Grouped Validation* (SAFEPROCESS 2027 manuscript), is
 this repository is the experimental record behind it.
 
 The data come from [voraus-AD](https://github.com/vorausrobotik/voraus-ad-dataset):
-a six-axis robot doing pick-and-place, 12 anomaly types, 755 anomalous cycles
+a six-axis robot doing pick-and-place, 12 anomaly categories, 755 anomalous cycles
 from 72 fault instantiations (`setting` values).
 
 ---
@@ -23,10 +24,12 @@ in which every fault instantiation is wholly in the training half or wholly in
 the test half.
 
 **1. Ties.** In 514 of 755 anomalous cycles two or three failure modes share the
-top score. Every tie lies inside one of four groups of modes whose declared
-signatures (joint scope, signal families, phase hint) are identical or, in the
-load-torque group, contain one another. 498 of the ties are in the load-torque
-group.
+top score. Every tie lies inside one of four groups of modes whose columns in
+the fault signature matrix (joint scope, signal families, phase hint) are
+identical or, in the load-torque group, nested. 498 of the ties are in the
+load-torque group. The knowledge base also declares the direction and time
+course of each mode's torque deviation, which the deployed score does not use;
+adding them removes 513 of the 514 ties but lowers top-1 on all five splits.
 
 **2. The top-1 figure depends on the declaration order.** Only 12 relative
 orders of the tied modes can change the result. Over them, top-1 accuracy ranges
@@ -41,12 +44,13 @@ top-5, MRR and group accuracy under every order. On balanced recall (mean
 per-category recall, tied modes sharing credit) the retrieval is slightly ahead,
 `0.105` against `0.095`.
 
-**4. Certificates.** For each group, a greedy search over named statistics of
-the existing signals looks for one that separates the members, and reports the
-result with held-out accuracy, three controls and a cost class. For the
-load-torque group the sign of the deviation does it: `0.840` within the group on
-unseen instantiations, against `0.562` for the deployed features. The free set
-{sign, step} reaches `0.869`. Collision: not adopted (no grouped search can run
+**4. Certificates.** For each group, a greedy search over predefined
+statistics of the existing signals looks for one that separates the members (a
+repair), and reports the result with held-out accuracy, three controls and a
+cost class. For the load-torque group the selected statistics, most often the
+sign of the deviation, reach `0.840` within the group on unseen instantiations,
+against `0.562` for the deployed features; sign alone reaches `0.827` and the
+free set {sign, step} `0.869`. Collision: not adopted (no grouped search can run
 with one carton instantiation per training half). Gripping: undetermined (one
 instantiation per mode). Commutation/over-temperature: untestable (no
 over-temperature instance).
@@ -54,13 +58,13 @@ over-temperature instance).
 **5. Grouped validation changes the decision.** Under a random split over cycles
 the search adopts a collision repair on every split. With one setting held out
 at a time, the same search and rule adopt it on 4 of 9 folds, and its held-out
-accuracy (`0.67` to `0.75`) is below the majority rate (`0.766`). A
+accuracy (`0.67` to `0.74`) is below the majority rate (`0.766`). A
 permuted-label control over cycles does not detect this; a permutation over
 whole settings does.
 
 **6. Controls.** A flat 12-way classifier over the same features reaches `0.525`
-top-1 against `0.309` for the two-stage system, and is ahead from about 8
-labelled cycles. Sending every cycle to the load-torque resolver gives `0.349`,
+top-1 against `0.309` for the two-stage system, and is ahead from 8 labelled
+cycles (on 15 of 20 splits for top-1 and for balanced recall). Sending every cycle to the load-torque resolver gives `0.349`,
 so the two-stage gain comes from the resolver, not from the routing.
 
 ---
@@ -90,9 +94,9 @@ is not needed. Scripts import each other flatly, so run them from inside
 | Command | What it computes | Output |
 |---|---|---|
 | `python baselines.py` | prevalence prior, balanced recall (declared order and tie-shared), exact tie-break enumeration, tie-robust comparison, set-valued coverage, constant router | `results/baselines.json` |
-| `python distinguishability.py` | twin groups, routes and the margin `tau`, tie composition, phase-weight sweep, knowledge-base columns, localization, authoring sensitivity | `results/distinguishability_results.json` |
+| `python distinguishability.py` | twin groups, routes and the margin `tau` (not in the paper), tie composition, phase-weight sweep, knowledge-base columns, localization, authoring sensitivity | `results/distinguishability_results.json` |
 | `python repair.py --control --labels --sensitivity` | repair certificates, random vs leave-setting-out comparison, flat classifier, label-budget curve, granularity ablation, sensitivity sweep (the longest run) | `results/repair_results.json`, `results/label_budget_curve.json` |
-| `python certificate_checks.py` | per-split searched dimensions, nested fixed configuration, routing, within-group confusion, all dimension subsets, mode-level signature term, label budget over 20 splits | `results/certificate_checks.json` |
+| `python certificate_checks.py` | per-split searched dimensions, nested fixed configuration and its gain over the retrieval, routing, within-group confusion, all dimension subsets, mode-level signature term, label budget over 20 splits (balanced recall in declared order and tie-shared) | `results/certificate_checks.json` |
 | `python protocol_check.py` | collision group under random and grouped validation, nine-fold comparison, setting-level permutation tests (about 20 minutes) | `results/protocol_check.json` |
 | `python held_out_eval.py` | the deployed retrieval weights re-chosen on each leave-setting-out training half; the earlier stratified experiment under `legacy` | `results/held_out_seeds.json` |
 
@@ -123,14 +127,13 @@ place it in `data/`.
 | Paper | Source |
 |---|---|
 | Sec. 3, retrieval weights re-chosen on training halves | `held_out_seeds.json` |
-| Sec. 4, ties, groups, phase, routes, `tau`, authoring sensitivity | `distinguishability_results.json` |
+| Sec. 4, ties, groups, phase, authoring sensitivity | `distinguishability_results.json` |
+| Sec. 4, direction and time course added to the score | `certificate_checks.json` → `mode_signature` |
 | Table 1 and Sec. 5.1 | `baselines.json` → `prior_vs_retrieval`, `tie_robust`, `balanced_recall_expected`, `balanced_recall` |
 | Fig. 1 and Sec. 5.2 | `baselines.json` → `tiebreak_exact`, `set_valued` |
-| Table 2 and Sec. 6 | `repair_results.json` (certificates, fixed configuration, summary), `certificate_checks.json` (searched dims, nested, subsets, within-group pairs), `baselines.json` → `constant_router` |
+| Table 2 and Sec. 6 | `repair_results.json` (certificates, fixed configuration, summary), `certificate_checks.json` (searched dims, `nested_fixed` with `fixed_gain_over_retrieval`, subsets, within-group pairs, `routing_fixed`), `baselines.json` → `constant_router` |
 | Sec. 7 | `protocol_check.json`, `repair_results.json` → `leakage_check` |
-| Sec. 8 | `certificate_checks.json` → `label_budget`, `routing_fixed`; `repair_results.json` → `control_flat_classifier` |
-| Conclusion, mode-level signature term | `certificate_checks.json` → `mode_signature` |
-| Detector AUROC (Sec. 3) | `mvtflow/train.py` → `results/detector_metrics.json` (needs the parquet; not shipped) |
+| Sec. 8 | `certificate_checks.json` → `label_budget` (`balanced_recall_tied`); `repair_results.json` → `control_flat_classifier`; `baselines.json` → `balanced_recall` → `flat control` (per-category recall) |
 
 Other results files: `synth_instantiation_power.json` (`synth_power.py`, needs
 the parquet), `sim_collision_power.json` and `sim_experiments.json`

@@ -224,13 +224,17 @@ def nested_fixed(ctx, searched, fixed_runs, verbose=True):
         dims = ["mag"] + [d for d in R.REPAIR_DIMS if votes[d] > len(others) / 2]
         sc = score_fixed(ctx, dims, s)
         fx = fixed_runs[s]
+        ret = _mean([ctx["cat_of_fm"][ctx["top1"][i]] == ctx["cat_of"][i]
+                     for i in fx["test"]])
         rows.append({"seed": s, "votes": votes, "dims": dims, "cost_class": _cost(dims),
                      "two_stage_top1": sc["two_stage_top1"],
                      "balanced_recall": sc["balanced_recall"],
                      "group_acc": sc["group_acc"],
                      "fixed_two_stage_top1": fx["two_stage_top1"],
                      "fixed_balanced_recall": fx["balanced_recall"],
-                     "fixed_group_acc": fx["group_acc"]})
+                     "fixed_group_acc": fx["group_acc"],
+                     "retrieval_top1": ret,
+                     "fixed_gain_over_retrieval": fx["two_stage_top1"] - ret})
     keys = ("two_stage_top1", "balanced_recall", "group_acc")
     out = {
         "rule": "for split s, a dimension is kept if the certificate's search selected it "
@@ -246,6 +250,9 @@ def nested_fixed(ctx, searched, fixed_runs, verbose=True):
                   "test half, so the vote is not fully independent of split s",
     }
     out["nested_minus_fixed"] = {k: out["mean"][k] - out["fixed_mean"][k] for k in keys}
+    gain = [r["fixed_gain_over_retrieval"] for r in rows]
+    out["fixed_gain_over_retrieval"] = {"per_split": gain, "min": float(min(gain)),
+                                        "max": float(max(gain)), "mean": _mean(gain)}
     if verbose:
         print("\n2. NESTED FIXED CONFIGURATION (dims from a majority of the other four splits)")
         for r in rows:
@@ -545,20 +552,29 @@ def mode_signature(ctx, w_on=W_SIGNATURE, verbose=True):
 # 7. Label budget, paired over twenty splits
 # ---------------------------------------------------------------------------
 ARMS = ("stage1_only", "prior_at_k", "control", "targeted", "unrestricted")
-METRICS = ("top1", "balanced_recall", "group_acc")
+METRICS = ("top1", "balanced_recall", "balanced_recall_tied", "group_acc")
+PAIRED = ("top1", "balanced_recall", "balanced_recall_tied")
 
 
-def _scores(ctx, test, pred, top1):
+def _scores(ctx, test, pred, top1, stage1=None):
     """Top-1, balanced recall and group (cluster) accuracy of one prediction list.
 
     The group of a prediction is the cluster of its mode; a stage-1 prediction
     of a mode with no voraus category keeps that mode's cluster.
+    balanced_recall_tied scores the predictions flagged in `stage1` (the
+    retrieval's rank-1 mode, declaration order) by expected credit over the
+    rank-1 tied set, as baselines.balanced_recall_expected does, and every
+    other prediction by a hard hit. Without `stage1` it equals balanced_recall.
     """
     y = [ctx["cat_of"][i] for i in test]
     grp = [ctx["rep"][ctx["fm_of_cat"][p]] if p in ctx["fm_of_cat"] else ctx["rep"][f]
            for p, f in zip(pred, top1)]
+    stage1 = stage1 or [False] * len(test)
+    credit = [B._tie_credit(ctx, B._tied(ctx, i), t) if s1 else float(p == t)
+              for i, p, t, s1 in zip(test, pred, y, stage1)]
     return {"top1": float(np.mean([a == b for a, b in zip(pred, y)])),
             "balanced_recall": B._macro(pred, y)[0],
+            "balanced_recall_tied": B._macro_credit(credit, y)[0],
             "group_acc": float(np.mean([a == ctx["true_cluster"][i]
                                         for a, i in zip(grp, test)]))}
 
@@ -593,7 +609,7 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
         shuf = [fit[j] for j in rng.permutation(len(fit))]
         Xte, _ = R.matrix(cyc, test, col, allg)
         Xte_d, _ = R.matrix(cyc, test, col, FIXED)
-        stage1 = _scores(ctx, test, kb, top1)
+        stage1 = _scores(ctx, test, kb, top1, [True] * len(test))
 
         # control on the whole fit half, for reference
         Xf, _ = R.matrix(cyc, fit, col, allg)
@@ -634,6 +650,7 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
                     resolvers[rep.get(sorted(members)[0])] = clf
                     n_sub[rep.get(sorted(members)[0])] = len(sub)
                 pred = list(kb)
+                from_kb = [True] * len(test)
                 applied = 0
                 for r, clf in resolvers.items():
                     idx = [j for j, f in enumerate(top1) if rep.get(f) == r]
@@ -641,7 +658,9 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
                         applied += n_sub[r]
                         for j, v in zip(idx, clf.predict(Xte_d[idx])):
                             pred[j] = int(v)
-                row[regime] = dict(_scores(ctx, test, pred, top1), labels_drawn=drawn,
+                            from_kb[j] = False
+                row[regime] = dict(_scores(ctx, test, pred, top1, from_kb),
+                                   labels_drawn=drawn,
                                    labels_fitted=fitted, labels_applied=applied,
                                    n_resolvers=len(resolvers))
             rows.append(row)
@@ -671,10 +690,10 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
             "mean": {a: {m: _mean(col_(a, m)) for m in METRICS} for a in ARMS},
             "sd": {a: {m: _sd(col_(a, m)) for m in METRICS} for a in ARMS},
             "control_minus_targeted": {m: _paired(col_("control", m), col_("targeted", m))
-                                       for m in ("top1", "balanced_recall")},
+                                       for m in PAIRED},
             "control_minus_unrestricted": {m: _paired(col_("control", m),
                                                       col_("unrestricted", m))
-                                           for m in ("top1", "balanced_recall")},
+                                           for m in PAIRED},
             "labels_mean": labels(ok),
             "paper_splits_mean": {a: {m: _mean(col_(a, m, paper)) for m in METRICS}
                                   for a in ARMS},
@@ -697,6 +716,10 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
                               "and this count never exceeds k",
             "paper_splits_mean": "the same means over seeds 0-4 only",
             "group_acc": "the predicted mode's twin cluster equals the true one",
+            "balanced_recall_tied": "balanced recall with each stage-1 prediction "
+                                    "scored by expected credit over the rank-1 tied "
+                                    "set (the form the paper uses); resolver and "
+                                    "control predictions are hard hits",
         },
         "per_split": rows,
         "summary": summary,
@@ -707,7 +730,8 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
     }
     out["reproduces"] = _budget_reproduction(summary)
     if verbose:
-        print(f"\n7. LABEL BUDGET, {len(seeds)} paired leave-setting-out splits")
+        print(f"\n7. LABEL BUDGET, {len(seeds)} paired leave-setting-out splits "
+              "(balanced recall with tied stage-1 modes sharing the credit)")
         print(f"   {'k':>4}  {'control':>8} {'targ':>7} {'unres':>7}   "
               f"{'bal ctl':>7} {'bal tg':>7}   {'d top1':>7} {'W/L/T':>8}   "
               f"{'d bal':>7} {'W/L/T':>8}   {'targ labels':>11}  {'ctl group':>11}")
@@ -721,10 +745,11 @@ def label_budget(ctx, sizes=BUDGETS, seeds=WIDE_SEEDS, verbose=True):
             grp5 = s["paper_splits_mean"]["control"]["group_acc"]
             print(f"   {k:>4}  {m['control']['top1']:>8.3f} {m['targeted']['top1']:>7.3f} "
                   f"{m['unrestricted']['top1']:>7.3f}   "
-                  f"{m['control']['balanced_recall']:>7.3f} "
-                  f"{m['targeted']['balanced_recall']:>7.3f}   "
+                  f"{m['control']['balanced_recall_tied']:>7.3f} "
+                  f"{m['targeted']['balanced_recall_tied']:>7.3f}   "
                   f"{d['top1']['mean']:>+7.3f} {wl['top1']:>8}   "
-                  f"{d['balanced_recall']['mean']:>+7.3f} {wl['balanced_recall']:>8}   "
+                  f"{d['balanced_recall_tied']['mean']:>+7.3f} "
+                  f"{wl['balanced_recall_tied']:>8}   "
                   f"{lab['targeted_fitted']:>5.1f} ({lab5['targeted_fitted']:>4.1f})  "
                   f"{m['control']['group_acc']:.3f} ({grp5:.3f})")
         cf = out["control_full_fit"]["mean"]
